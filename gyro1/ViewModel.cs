@@ -1,9 +1,15 @@
 ﻿using NKH.MindSqualls;
 using System;
 using System.Collections.Generic;
+using System.Collections.ObjectModel;
 using System.ComponentModel;
+using System.Globalization;
 using System.Runtime.CompilerServices;
+using System.Windows;
+using System.Windows.Data;
 using System.Windows.Media;
+using System.Windows.Shapes;
+using System.Windows.Threading;
 using Xceed.Wpf.Toolkit.PropertyGrid.Attributes;
 
 namespace gyro1
@@ -21,6 +27,8 @@ namespace gyro1
         }
 
         #endregion INotifyPropertyChanged
+
+        public bool Delay { get { return _Delay; } set { _Delay = value; OnPropertyChanged(); } } bool _Delay = false; 
 
         [Browsable(false)]
         public string Title { get { return _Title; } set { _Title = value; OnPropertyChanged(); } } private string _Title = "Gyro1";
@@ -40,8 +48,6 @@ namespace gyro1
                 return b;
             }            
         }
-
-        public List<PoseTrail> PoseTrails { get; set; }
 
         //-------------------------------------------------------------
 
@@ -72,5 +78,19 @@ namespace gyro1
     }
 
     public enum RobotState { Uninitialized, Connected, Initialized, Idle, Stop, Moving };
+
+    public class ColorToBrushConverter : IValueConverter
+    {
+        public object Convert(object value, Type targetType, object parameter, CultureInfo culture)
+        {
+            return new SolidColorBrush((Color)value);
+        }
+
+        public object ConvertBack(object value, Type targetType, object parameter, CultureInfo culture)
+        {
+            throw new NotImplementedException();
+        }
+    }
+
 
 }

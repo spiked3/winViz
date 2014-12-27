@@ -1,7 +1,10 @@
-﻿using NKH.MindSqualls;
+﻿using NDesk.Options;
+using NKH.MindSqualls;
 using System;
 using System.Collections.Generic;
 using System.Windows;
+using System.Windows.Media;
+using System.Windows.Shapes;
 using System.Windows.Threading;
 
 namespace gyro1
@@ -17,10 +20,21 @@ namespace gyro1
 
         private ViewModel ViewModel { get { return (DataContext as ViewModel); } }
 
+        List<UIElement> ObjectsToFade = new List<UIElement>();
+
         public MainWindow()
         {
             _thisInstance = this;
             InitializeComponent();
+
+            // command line
+            var p = new OptionSet
+            {
+   	            { "delay", v => ViewModel.Delay = v != null},
+            };
+
+            p.Parse(Environment.GetCommandLineArgs());
+            System.Diagnostics.Trace.WriteLine(string.Format("Startup args: nonxt: {0}", ViewModel.Delay));
         }
 
         private void MenuExit_Click(object sender, RoutedEventArgs e)
@@ -32,6 +46,10 @@ namespace gyro1
         {
             // enumerate com ports
             ViewModel.ComPorts = new List<string>(System.IO.Ports.SerialPort.GetPortNames());
+            ComPort.SelectedValue = "COM10"; // default
+
+            if (!ViewModel.Delay)
+                InitNxt();
 
             DispatcherTimer t = new DispatcherTimer { Interval = new TimeSpan(0, 0, 0, 0, 1 / 10) };
             t.Tick += Timer_Tick;
@@ -50,10 +68,11 @@ namespace gyro1
             });
         }
 
-        private void Reset_Click(object sender, RoutedEventArgs e)
+        void InitNxt()
         {
-            //ViewModel.Nxt = new NKH.MindSqualls.NxtBrick((string)ComPort.SelectedItem);
-            ViewModel.Nxt = new NKH.MindSqualls.NxtBrick(NxtCommLinkType.USB, 0);
+            byte p = byte.Parse(ComPort.SelectedValue.ToString().Substring(3));
+            ViewModel.Nxt = new NKH.MindSqualls.NxtBrick(NxtCommLinkType.Bluetooth, p);
+            //ViewModel.Nxt = new NKH.MindSqualls.NxtBrick(NxtCommLinkType.USB, 0);
             try
             {
                 ViewModel.Nxt.Connect();
@@ -90,14 +109,24 @@ namespace gyro1
             //ViewModel.Nxt.InitSensors();
 
             ViewModel.Bumper1.OnPressed += Bumper1_OnPressed;
-            ViewModel.Bumper1.PollInterval = 200;
+            ViewModel.Bumper1.PollInterval = 1000 / 15;   // x times per second
 
             ViewModel.State = RobotState.Initialized;
         }
 
+        private void Reset_Click(object sender, RoutedEventArgs e)
+        {
+            ViewModel.State = RobotState.Uninitialized;
+            ViewModel.Nxt = null;
+
+            InitNxt();
+        }
+
         void Bumper1_OnPressed(NxtSensor sensor)
         {
-            Dispatcher.InvokeAsync(() => {
+            System.Diagnostics.Trace.WriteLine("Bumper1_OnPressed");
+            Dispatcher.InvokeAsync(() =>
+            {
                 ViewModel.OnPropertyChanged("Touch1Brush");
             });
         }
@@ -110,20 +139,55 @@ namespace gyro1
         {
         }
 
-        private void Thumb_DragDelta(object sender, System.Windows.Controls.Primitives.DragDeltaEventArgs e)
-        {
-        }
-
         private void Test_Click(object sender, RoutedEventArgs e)
         {
+            var transX = MyCanvas.ActualWidth / 2.0;
+            var transY = MyCanvas.ActualHeight / 2.0;
             double deg2rad = Math.PI / 180.0;
             var r = 20;
-            for (var angle = 0; angle <=180; angle+=10)
+            for (var angle = 0; angle <= 180; angle += 10)
             {
-                var pose = new Point(Math.Cos((angle -180) * deg2rad) * r, -Math.Sin((angle -180) * deg2rad) * r);
+                var pose = new Point(Math.Cos((angle - 180) * deg2rad) * r, -Math.Sin((angle - 180) * deg2rad) * r);
                 System.Diagnostics.Trace.WriteLine(string.Format("Pose {0:F2}", pose));
-                ViewModel.PoseTrails.Add(new PoseTrail(pose, PoseTrails));
+
+                var el = new FadingEllipse { Width = 20, Height = 20, Fill = Brushes.Blue };
+
+                MyCanvas.Children.Add(el);
+                ObjectsToFade.Add(el);
+                MyCanvas.SetLeft(el, pose.X + transX);
+                MyCanvas.SetTop(el, pose.Y + transY);
+
+                MyCanvas.InvalidateVisual();
+                Dispatcher.DoEvents();
+
+                System.Threading.Thread.Sleep(200);
             }
         }
     }
+
+    public class FadingEllipse : Ellipse
+    {
+        static TimeSpan i1 = new TimeSpan(0, 0, 0, 0, 200);
+
+        public FadingEllipse() : base()
+        {
+            var t = new DispatcherTimer { Interval = i1 };
+            t.Tick += t_Tick;
+        }
+
+        void t_Tick(object sender, EventArgs e)
+        {
+
+        }
+    }
+
+    public static class extensions
+    {
+        public static void DoEvents(this Dispatcher d)
+        {
+            d.Invoke(DispatcherPriority.Background, new Action(delegate { }));
+        }
+    }
+
+
 }

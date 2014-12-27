@@ -1,6 +1,10 @@
-﻿using System.Windows;
+﻿using System;
+using System.Collections.Generic;
+using System.Windows;
 using System.Windows.Controls;
 using System.Windows.Media;
+using System.Windows.Shapes;
+using System.Windows.Threading;
 
 namespace gyro1
 {
@@ -21,10 +25,10 @@ namespace gyro1
         public static readonly DependencyProperty ForegroundProperty =
             DependencyProperty.Register("Foreground", typeof(Brush), typeof(MyCanvas), new PropertyMetadata(Brushes.Black));
 
+
         protected override void OnRender(System.Windows.Media.DrawingContext dc)
         {
-            dc.DrawRectangle(Background, null, new Rect(0, 0, ActualWidth, ActualHeight));
-            
+            dc.DrawRectangle(Background, null, new Rect(0, 0, ActualWidth, ActualHeight));           
 
             // center of canvas represents 0,0
             var centerX = ActualWidth / 2;
@@ -47,9 +51,14 @@ namespace gyro1
             // point at 0,0
             dc.DrawEllipse(Brushes.Black, null, new Point(centerX, centerY), 5, 5);
 
+            //foreach (var el in (DataContext as ViewModel).PoseTrails)
+            //    dc.DrawEllipse()
+
             var t = new FormattedText("Hello World", System.Globalization.CultureInfo.CurrentCulture, System.Windows.FlowDirection.LeftToRight,
                 DefaultFont, 18.0, Foreground);
             dc.DrawText(t, HelloPoint);
         }
     }
+
+    
 }

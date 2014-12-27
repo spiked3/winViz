@@ -13,7 +13,7 @@ namespace gyro1
         Point HelloPoint = new Point(20, 20);
         private Typeface DefaultFont = new Typeface("Verdana");
 
-        Pen gridPen = new Pen(new SolidColorBrush(Color.FromArgb(0xff, 0xf0, 0xf0, 0xf0)), 2.0);
+        Pen gridPen = new Pen(new SolidColorBrush(Color.FromArgb(0xff, 0xf0, 0xf0, 0xf0)), 1.0);
         Pen gridThickPen = new Pen(new SolidColorBrush(Color.FromArgb(0xff, 0xf0, 0xf0, 0xf0)), 3.0);
 
         public Brush Foreground
@@ -50,9 +50,6 @@ namespace gyro1
 
             // point at 0,0
             dc.DrawEllipse(Brushes.Black, null, new Point(centerX, centerY), 5, 5);
-
-            //foreach (var el in (DataContext as ViewModel).PoseTrails)
-            //    dc.DrawEllipse()
 
             var t = new FormattedText("Hello World", System.Globalization.CultureInfo.CurrentCulture, System.Windows.FlowDirection.LeftToRight,
                 DefaultFont, 18.0, Foreground);

@@ -3,17 +3,16 @@
         xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
         xmlns:local="clr-namespace:gyro1"
         Title="{Binding Title}" Height="600" Width="800" Loaded="Window_Loaded">
+
     <Window.DataContext>
-        <local:ViewModel />
+        <local:DataModel />
     </Window.DataContext>
 
     <Window.Resources>
-
         <Style x:Key="MenuButton" TargetType="Button">
             <Setter Property="Width" Value="42" />
             <Setter Property="Margin" Value="4" />
         </Style>
-
     </Window.Resources>
 
     <DockPanel LastChildFill="True">
@@ -31,9 +30,12 @@
         <StatusBar DockPanel.Dock="Bottom">
             <TextBlock Text="{Binding State}" />
         </StatusBar>
-        <local:NxtPanel DockPanel.Dock="Right" />
-        <Grid>
+        <ScrollViewer DockPanel.Dock="Bottom" Height="90" >
+            <ListBox x:Name="Console" Background="Black" Foreground="White" />
+        </ScrollViewer>
+        <local:NxtPanel DockPanel.Dock="Right" Margin="2" />
+        <Border BorderThickness="2" BorderBrush="Black"   >
             <local:MyCanvas x:Name="MyCanvas" />
-        </Grid>
+        </Border>
     </DockPanel>
 </Window>

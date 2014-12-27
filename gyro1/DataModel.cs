@@ -14,7 +14,7 @@ using Xceed.Wpf.Toolkit.PropertyGrid.Attributes;
 
 namespace gyro1
 {
-    public class ViewModel : INotifyPropertyChanged
+    public class DataModel : INotifyPropertyChanged
     {
         #region INotifyPropertyChanged
 

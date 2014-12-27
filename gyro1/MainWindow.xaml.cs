@@ -14,18 +14,13 @@ namespace gyro1
     /// </summary>
     public partial class MainWindow : Window
     {
-        private static MainWindow _thisInstance;
-
-        public static string Status { set { (_thisInstance.DataContext as ViewModel).StatusText = value; } }
-
-        private ViewModel ViewModel { get { return (DataContext as ViewModel); } }
-
-        List<UIElement> ObjectsToFade = new List<UIElement>();
+        private DataModel ViewModel { get { return (DataContext as DataModel); } }
 
         public MainWindow()
         {
-            _thisInstance = this;
             InitializeComponent();
+
+            new TraceDecorator(Console);
 
             // command line
             var p = new OptionSet
@@ -138,9 +133,12 @@ namespace gyro1
         private void Stop_Click(object sender, RoutedEventArgs e)
         {
         }
+        
+        static TimeSpan tsFade = new TimeSpan(0,0,0,0,400);
 
         private void Test_Click(object sender, RoutedEventArgs e)
         {
+            
             var transX = MyCanvas.ActualWidth / 2.0;
             var transY = MyCanvas.ActualHeight / 2.0;
             double deg2rad = Math.PI / 180.0;
@@ -150,10 +148,15 @@ namespace gyro1
                 var pose = new Point(Math.Cos((angle - 180) * deg2rad) * r, -Math.Sin((angle - 180) * deg2rad) * r);
                 System.Diagnostics.Trace.WriteLine(string.Format("Pose {0:F2}", pose));
 
-                var el = new FadingEllipse { Width = 20, Height = 20, Fill = Brushes.Blue };
+                var el = new Ellipse { Width = 5, Height = 5, Fill = Brushes.Blue };
 
                 MyCanvas.Children.Add(el);
-                ObjectsToFade.Add(el);
+                new DispatcherTimer(tsFade, DispatcherPriority.Background, (s, ee) => {
+                        el.Opacity *= .8;
+                        if (el.Opacity < .1)
+                            MyCanvas.Children.Remove(el);
+                    }, Dispatcher).Start();
+
                 MyCanvas.SetLeft(el, pose.X + transX);
                 MyCanvas.SetTop(el, pose.Y + transY);
 
@@ -165,29 +168,63 @@ namespace gyro1
         }
     }
 
-    public class FadingEllipse : Ellipse
-    {
-        static TimeSpan i1 = new TimeSpan(0, 0, 0, 0, 200);
-
-        public FadingEllipse() : base()
-        {
-            var t = new DispatcherTimer { Interval = i1 };
-            t.Tick += t_Tick;
-        }
-
-        void t_Tick(object sender, EventArgs e)
-        {
-
-        }
-    }
-
     public static class extensions
     {
         public static void DoEvents(this Dispatcher d)
         {
             d.Invoke(DispatcherPriority.Background, new Action(delegate { }));
         }
+
+       
+        public static T TryFindParent<T>(this DependencyObject child)
+            where T : DependencyObject
+        {
+            //get parent item
+            DependencyObject parentObject = GetParentObject(child);
+
+            //we've reached the end of the tree
+            if (parentObject == null) return null;
+
+            //check if the parent matches the type we're looking for
+            T parent = parentObject as T;
+            if (parent != null)
+            {
+                return parent;
+            }
+            else
+            {
+                //use recursion to proceed with next level
+                return TryFindParent<T>(parentObject);
+            }
+        }
+
+        
+        public static DependencyObject GetParentObject(this DependencyObject child)
+        {
+            if (child == null) return null;
+
+            //handle content elements separately
+            ContentElement contentElement = child as ContentElement;
+            if (contentElement != null)
+            {
+                DependencyObject parent = ContentOperations.GetParent(contentElement);
+                if (parent != null) return parent;
+
+                FrameworkContentElement fce = contentElement as FrameworkContentElement;
+                return fce != null ? fce.Parent : null;
+            }
+
+            //also try searching for parent in framework elements (such as DockPanel, etc)
+            FrameworkElement frameworkElement = child as FrameworkElement;
+            if (frameworkElement != null)
+            {
+                DependencyObject parent = frameworkElement.Parent;
+                if (parent != null) return parent;
+            }
+
+            //if it's not a ContentElement/FrameworkElement, rely on VisualTreeHelper
+            return VisualTreeHelper.GetParent(child);
+        }
+
     }
-
-
 }

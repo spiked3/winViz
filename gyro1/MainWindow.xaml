@@ -30,9 +30,7 @@
         <StatusBar DockPanel.Dock="Bottom">
             <TextBlock Text="{Binding State}" />
         </StatusBar>
-        <ScrollViewer DockPanel.Dock="Bottom" Height="90" >
-            <ListBox x:Name="Console" Background="Black" Foreground="White" />
-        </ScrollViewer>
+        <local:Console Height="90" DockPanel.Dock="Bottom" />
         <local:NxtPanel DockPanel.Dock="Right" Margin="2" />
         <Border BorderThickness="2" BorderBrush="Black"   >
             <local:MyCanvas x:Name="MyCanvas" />

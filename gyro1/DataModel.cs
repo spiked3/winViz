@@ -1,15 +1,11 @@
 ﻿using NKH.MindSqualls;
 using System;
 using System.Collections.Generic;
-using System.Collections.ObjectModel;
 using System.ComponentModel;
 using System.Globalization;
 using System.Runtime.CompilerServices;
-using System.Windows;
 using System.Windows.Data;
 using System.Windows.Media;
-using System.Windows.Shapes;
-using System.Windows.Threading;
 using Xceed.Wpf.Toolkit.PropertyGrid.Attributes;
 
 namespace gyro1
@@ -28,7 +24,8 @@ namespace gyro1
 
         #endregion INotifyPropertyChanged
 
-        public bool Delay { get { return _Delay; } set { _Delay = value; OnPropertyChanged(); } } bool _Delay = false; 
+        [Category("Program")]
+        public bool Delay { get { return _Delay; } set { _Delay = value; OnPropertyChanged(); } } private bool _Delay = false;
 
         [Browsable(false)]
         public string Title { get { return _Title; } set { _Title = value; OnPropertyChanged(); } } private string _Title = "Gyro1";
@@ -36,8 +33,10 @@ namespace gyro1
         [Browsable(false)]
         public string StatusText { get { return _StatusText; } set { _StatusText = value; OnPropertyChanged(); } } private string _StatusText = "Ready";
 
+        [Browsable(false)]
         public List<string> ComPorts { get { return _ComPorts; } set { _ComPorts = value; OnPropertyChanged(); } } private List<string> _ComPorts;
 
+        [Browsable(false)]
         public Brush Touch1Brush
         {
             get
@@ -46,35 +45,58 @@ namespace gyro1
                 if (Bumper1 != null && Bumper1.IsPressed.Value)
                     b = Brushes.Red;
                 return b;
-            }            
+            }
         }
 
-        //-------------------------------------------------------------
+        //-----  Robot --------------------------------------------------------
 
-        [ExpandableObject]
+        // robot geometry in MM
+        [Category("Robot")]
+        public double WheelBase { get { return _WheelBase; } set { _WheelBase = value; OnPropertyChanged(); } } private double _WheelBase = 115.5;
+
+        [Category("Robot")]
+        public double WheelDiameter { get { return _WheelDiameter; } set { _WheelDiameter = value; OnPropertyChanged(); } } private double _WheelDiameter = 155.3;
+
+        [Category("Robot")]
+        public int TicksPerRevolution { get { return _TicksPerRevolution; } set { _TicksPerRevolution = value; OnPropertyChanged(); } } private int _TicksPerRevolution = 120;
+
+        [Category("Robot")]
+        public long LastLeftTacho { get { return _LastLeftTacho; } set { _LastLeftTacho = value; OnPropertyChanged(); } } private long _LastLeftTacho = 0L;
+
+        [Category("Robot")]
+        public long LastRightTacho { get { return _LastRightTacho; } set { _LastRightTacho = value; OnPropertyChanged(); } } private long _LastRightTacho = 0L;
+
+        [Category("Robot")]
+        public double RobotX { get { return _RobotX; } set { _RobotX = value; OnPropertyChanged(); } } private double _RobotX = 0;
+
+        [Category("Robot")]
+        public double RobotY { get { return _RobotY; } set { _RobotY = value; OnPropertyChanged(); } } private double _RobotY = 0;
+
+        [Category("Robot")]
+        public double RobotH { get { return _RobotH; } set { _RobotH = value; OnPropertyChanged(); } } private double _RobotH = 0;
+
+        [Category("Robot")]
+        public RobotState State { get { return _State; } set { _State = value; OnPropertyChanged(); } } private RobotState _State = RobotState.Uninitialized;
+
+        //--  NXT  ----------------------------------------------------
+
+        [Category("NXT"), ExpandableObject]
         public NxtBrick Nxt { get { return _Nxt; } set { _Nxt = value; OnPropertyChanged(); } } private NxtBrick _Nxt;
 
+        [Category("NXT")]
         public string Name { get { return _Name; } set { _Name = value; OnPropertyChanged(); } } private string _Name = "???";
 
+        [Category("NXT")]
         public NxtMotor Left { get { return _Left; } set { _Left = value; OnPropertyChanged(); } } private NxtMotor _Left;
 
+        [Category("NXT")]
         public NxtMotor Right { get { return _Right; } set { _Right = value; OnPropertyChanged(); } } private NxtMotor _Right;
 
+        [Category("NXT")]
         public NxtTouchSensor Bumper1 { get { return _Bumper1; } set { _Bumper1 = value; OnPropertyChanged(); } } private NxtTouchSensor _Bumper1;
 
+        [Category("NXT")]
         public float Battery { get { return _Battery; } set { _Battery = value; OnPropertyChanged(); } } private float _Battery = -1f;
-
-        public long LeftEncoder { get { return _LeftEncoder; } set { _LeftEncoder = value; OnPropertyChanged(); } } private long _LeftEncoder = 0;
-
-        public long RightEncoder { get { return _RightEncoder; } set { _RightEncoder = value; OnPropertyChanged(); } } private long _RightEncoder = 0;
-
-        public double X { get { return _X; } set { _X = value; OnPropertyChanged(); } } private double _X = 0.0;
-
-        public double Y { get { return _Y; } set { _Y = value; OnPropertyChanged(); } } private double _Y = 0.0;
-
-        public double Heading { get { return _Heading; } set { _Heading = value; OnPropertyChanged(); } } private double _Heading = 0.0;
-
-        public RobotState State { get { return _State; } set { _State = value; OnPropertyChanged(); } } private RobotState _State = RobotState.Uninitialized;
     }
 
     public enum RobotState { Uninitialized, Connected, Initialized, Idle, Stop, Moving };
@@ -91,6 +113,4 @@ namespace gyro1
             throw new NotImplementedException();
         }
     }
-
-
 }

@@ -14,22 +14,20 @@ namespace gyro1
     /// </summary>
     public partial class MainWindow : Window
     {
-        private DataModel ViewModel { get { return (DataContext as DataModel); } }
+        private DataModel DataModel { get { return (DataContext as DataModel); } }
 
         public MainWindow()
         {
             InitializeComponent();
 
-            new TraceDecorator(Console);
-
             // command line
             var p = new OptionSet
             {
-   	            { "delay", v => ViewModel.Delay = v != null},
+   	            { "delay", v => DataModel.Delay = v != null},
             };
 
             p.Parse(Environment.GetCommandLineArgs());
-            System.Diagnostics.Trace.WriteLine(string.Format("Startup args: nonxt: {0}", ViewModel.Delay));
+            System.Diagnostics.Trace.WriteLine(string.Format("Startup args: nonxt: {0}", DataModel.Delay));
         }
 
         private void MenuExit_Click(object sender, RoutedEventArgs e)
@@ -40,10 +38,10 @@ namespace gyro1
         private void Window_Loaded(object sender, RoutedEventArgs e)
         {
             // enumerate com ports
-            ViewModel.ComPorts = new List<string>(System.IO.Ports.SerialPort.GetPortNames());
+            DataModel.ComPorts = new List<string>(System.IO.Ports.SerialPort.GetPortNames());
             ComPort.SelectedValue = "COM10"; // default
 
-            if (!ViewModel.Delay)
+            if (!DataModel.Delay)
                 InitNxt();
 
             DispatcherTimer t = new DispatcherTimer { Interval = new TimeSpan(0, 0, 0, 0, 1 / 10) };
@@ -55,22 +53,56 @@ namespace gyro1
         {
             Dispatcher.InvokeAsync(() =>
             {
-                if (ViewModel.Nxt != null && ViewModel.Nxt.IsConnected)
+                if (DataModel.Nxt != null && DataModel.Nxt.IsConnected)
                 {
-                    ViewModel.Name = ViewModel.Nxt.Name;
-                    ViewModel.Battery = ViewModel.Nxt.BatteryLevel;
+                    DataModel.Name = DataModel.Nxt.Name;
+                    DataModel.Battery = DataModel.Nxt.BatteryLevel;
+                    UpdatePose(DataModel.Nxt);
                 }
             });
+        }
+
+        
+
+        private void UpdatePose(NxtBrick nxtBrick)
+        {
+            if (nxtBrick == null || nxtBrick.MotorC == null || nxtBrick.MotorA == null)
+                return;
+
+            if (!nxtBrick.MotorC.TachoCount.HasValue || !nxtBrick.MotorA.TachoCount.HasValue)
+                return;
+
+            DataModel d = (DataContext as DataModel);
+
+            double ticksToMM = d.WheelDiameter / d.TicksPerRevolution;
+
+            var leftTachoChange = nxtBrick.MotorC.TachoCount.Value - d.LastLeftTacho;
+            var rightTachoChange = nxtBrick.MotorA.TachoCount.Value - d.LastRightTacho;
+
+            var leftDelta = leftTachoChange * ticksToMM;
+            var rightDelta = rightTachoChange * ticksToMM;
+
+            double tachoAlpha = (rightDelta - leftDelta) / d.WheelBase;
+
+            double radius = leftDelta / tachoAlpha;
+            d.RobotH += tachoAlpha;
+            d.RobotH %= (2 * Math.PI);
+
+            d.RobotX += radius * Math.Cos(d.RobotH);
+            d.RobotY += radius * Math.Sin(d.RobotH);
+
+            d.LastLeftTacho = nxtBrick.MotorC.TachoCount.Value;
+            d.LastRightTacho = nxtBrick.MotorA.TachoCount.Value;            
         }
 
         void InitNxt()
         {
             byte p = byte.Parse(ComPort.SelectedValue.ToString().Substring(3));
-            ViewModel.Nxt = new NKH.MindSqualls.NxtBrick(NxtCommLinkType.Bluetooth, p);
+            DataModel.Nxt = new NKH.MindSqualls.NxtBrick(NxtCommLinkType.Bluetooth, p);
             //ViewModel.Nxt = new NKH.MindSqualls.NxtBrick(NxtCommLinkType.USB, 0);
             try
             {
-                ViewModel.Nxt.Connect();
+                DataModel.Nxt.Connect();
             }
             catch (Exception Ex)
             {
@@ -78,41 +110,41 @@ namespace gyro1
                 return;
             }
 
-            if (!ViewModel.Nxt.IsConnected)
+            if (!DataModel.Nxt.IsConnected)
             {
                 System.Diagnostics.Debugger.Break();
                 MessageBox.Show("Nxt did not connect.", "Error", MessageBoxButton.OK, MessageBoxImage.Error);
                 return;
             }
 
-            ViewModel.State = RobotState.Connected;
+            DataModel.State = RobotState.Connected;
             System.Threading.Thread.Sleep(500);
 
-            ViewModel.Nxt.CommLink.StopProgram();
+            DataModel.Nxt.CommLink.StopProgram();
             System.Threading.Thread.Sleep(500);
 
-            ViewModel.Left = new NxtMotor();
-            ViewModel.Right = new NxtMotor(true);
-            ViewModel.Bumper1 = new NxtTouchSensor();
+            DataModel.Left = new NxtMotor();
+            DataModel.Right = new NxtMotor(true);
+            DataModel.Bumper1 = new NxtTouchSensor();
 
-            ViewModel.Nxt.MotorC = ViewModel.Left;
-            ViewModel.Nxt.MotorA = ViewModel.Right;
-            ViewModel.Nxt.Sensor1 = ViewModel.Bumper1;
+            DataModel.Nxt.MotorC = DataModel.Left;
+            DataModel.Nxt.MotorA = DataModel.Right;
+            DataModel.Nxt.Sensor1 = DataModel.Bumper1;
 
             //ViewModel.Nxt.CommLink.StartProgram("MotorControl22");
             //System.Threading.Thread.Sleep(500);
             //ViewModel.Nxt.InitSensors();
 
-            ViewModel.Bumper1.OnPressed += Bumper1_OnPressed;
-            ViewModel.Bumper1.PollInterval = 1000 / 15;   // x times per second
+            DataModel.Bumper1.OnPressed += Bumper1_OnPressed;
+            DataModel.Bumper1.PollInterval = 1000 / 15;   // x times per second
 
-            ViewModel.State = RobotState.Initialized;
+            DataModel.State = RobotState.Initialized;
         }
 
         private void Reset_Click(object sender, RoutedEventArgs e)
         {
-            ViewModel.State = RobotState.Uninitialized;
-            ViewModel.Nxt = null;
+            DataModel.State = RobotState.Uninitialized;
+            DataModel.Nxt = null;
 
             InitNxt();
         }
@@ -122,7 +154,7 @@ namespace gyro1
             System.Diagnostics.Trace.WriteLine("Bumper1_OnPressed");
             Dispatcher.InvokeAsync(() =>
             {
-                ViewModel.OnPropertyChanged("Touch1Brush");
+                DataModel.OnPropertyChanged("Touch1Brush");
             });
         }
 
@@ -134,7 +166,7 @@ namespace gyro1
         {
         }
         
-        static TimeSpan tsFade = new TimeSpan(0,0,0,0,400);
+        static TimeSpan tsFade = new TimeSpan(0,0,0,0,100);
 
         private void Test_Click(object sender, RoutedEventArgs e)
         {
@@ -152,7 +184,7 @@ namespace gyro1
 
                 MyCanvas.Children.Add(el);
                 new DispatcherTimer(tsFade, DispatcherPriority.Background, (s, ee) => {
-                        el.Opacity *= .8;
+                        el.Opacity *= .7;
                         if (el.Opacity < .1)
                             MyCanvas.Children.Remove(el);
                     }, Dispatcher).Start();
@@ -163,68 +195,8 @@ namespace gyro1
                 MyCanvas.InvalidateVisual();
                 Dispatcher.DoEvents();
 
-                System.Threading.Thread.Sleep(200);
+                System.Threading.Thread.Sleep(50);
             }
         }
-    }
-
-    public static class extensions
-    {
-        public static void DoEvents(this Dispatcher d)
-        {
-            d.Invoke(DispatcherPriority.Background, new Action(delegate { }));
-        }
-
-       
-        public static T TryFindParent<T>(this DependencyObject child)
-            where T : DependencyObject
-        {
-            //get parent item
-            DependencyObject parentObject = GetParentObject(child);
-
-            //we've reached the end of the tree
-            if (parentObject == null) return null;
-
-            //check if the parent matches the type we're looking for
-            T parent = parentObject as T;
-            if (parent != null)
-            {
-                return parent;
-            }
-            else
-            {
-                //use recursion to proceed with next level
-                return TryFindParent<T>(parentObject);
-            }
-        }
-
-        
-        public static DependencyObject GetParentObject(this DependencyObject child)
-        {
-            if (child == null) return null;
-
-            //handle content elements separately
-            ContentElement contentElement = child as ContentElement;
-            if (contentElement != null)
-            {
-                DependencyObject parent = ContentOperations.GetParent(contentElement);
-                if (parent != null) return parent;
-
-                FrameworkContentElement fce = contentElement as FrameworkContentElement;
-                return fce != null ? fce.Parent : null;
-            }
-
-            //also try searching for parent in framework elements (such as DockPanel, etc)
-            FrameworkElement frameworkElement = child as FrameworkElement;
-            if (frameworkElement != null)
-            {
-                DependencyObject parent = frameworkElement.Parent;
-                if (parent != null) return parent;
-            }
-
-            //if it's not a ContentElement/FrameworkElement, rely on VisualTreeHelper
-            return VisualTreeHelper.GetParent(child);
-        }
-
-    }
+    }    
 }

@@ -74,13 +74,20 @@
       <Generator>MSBuild:Compile</Generator>
       <SubType>Designer</SubType>
     </ApplicationDefinition>
+    <Compile Include="Plumbing\Console.xaml.cs">
+      <DependentUpon>Console.xaml</DependentUpon>
+    </Compile>
     <Compile Include="DiIMU.cs" />
+    <Compile Include="Plumbing\Extensions.cs" />
     <Compile Include="MyCanvas.cs" />
     <Compile Include="NxtPanel.xaml.cs">
       <DependentUpon>NxtPanel.xaml</DependentUpon>
     </Compile>
     <Compile Include="DataModel.cs" />
-    <Compile Include="TraceListener.cs" />
+    <Page Include="Plumbing\Console.xaml">
+      <SubType>Designer</SubType>
+      <Generator>MSBuild:Compile</Generator>
+    </Page>
     <Page Include="MainWindow.xaml">
       <Generator>MSBuild:Compile</Generator>
       <SubType>Designer</SubType>

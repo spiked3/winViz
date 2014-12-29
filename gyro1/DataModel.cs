@@ -52,13 +52,13 @@ namespace gyro1
 
         // robot geometry in MM
         [Category("Robot")]
-        public double WheelBase { get { return _WheelBase; } set { _WheelBase = value; OnPropertyChanged(); } } private double _WheelBase = 115.5;
+        public double WheelBase { get { return _WheelBase; } set { _WheelBase = value; OnPropertyChanged(); } } private double _WheelBase = 120;
 
         [Category("Robot")]
-        public double WheelDiameter { get { return _WheelDiameter; } set { _WheelDiameter = value; OnPropertyChanged(); } } private double _WheelDiameter = 155.3;
+        public double WheelDiameter { get { return _WheelDiameter; } set { _WheelDiameter = value; OnPropertyChanged(); } } private double _WheelDiameter = 80;
 
         [Category("Robot")]
-        public int TicksPerRevolution { get { return _TicksPerRevolution; } set { _TicksPerRevolution = value; OnPropertyChanged(); } } private int _TicksPerRevolution = 120;
+        public int TicksPerRevolution { get { return _TicksPerRevolution; } set { _TicksPerRevolution = value; OnPropertyChanged(); } } private int _TicksPerRevolution = 360;
 
         [Category("Robot")]
         public long LastLeftTacho { get { return _LastLeftTacho; } set { _LastLeftTacho = value; OnPropertyChanged(); } } private long _LastLeftTacho = 0L;
@@ -86,11 +86,15 @@ namespace gyro1
         [Category("NXT")]
         public string Name { get { return _Name; } set { _Name = value; OnPropertyChanged(); } } private string _Name = "???";
 
+
         [Category("NXT")]
         public NxtMotor Left { get { return _Left; } set { _Left = value; OnPropertyChanged(); } } private NxtMotor _Left;
 
         [Category("NXT")]
         public NxtMotor Right { get { return _Right; } set { _Right = value; OnPropertyChanged(); } } private NxtMotor _Right;
+
+        [Category("NXT")]
+        public NxtMotorSync MotorPair { get { return _MotorPair; } set { _MotorPair = value; OnPropertyChanged(); } } NxtMotorSync _MotorPair; 
 
         [Category("NXT")]
         public NxtTouchSensor Bumper1 { get { return _Bumper1; } set { _Bumper1 = value; OnPropertyChanged(); } } private NxtTouchSensor _Bumper1;

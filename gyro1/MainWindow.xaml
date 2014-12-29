@@ -10,7 +10,7 @@
 
     <Window.Resources>
         <Style x:Key="MenuButton" TargetType="Button">
-            <Setter Property="Width" Value="42" />
+            <Setter Property="Width" Value="48" />
             <Setter Property="Margin" Value="4" />
         </Style>
     </Window.Resources>
@@ -24,8 +24,13 @@
             <ComboBox x:Name="ComPort" ItemsSource="{Binding ComPorts}" SelectedIndex="0" Width="72" />
             <Button Content="Reset" Style="{StaticResource MenuButton}" Click="Reset_Click" />
             <Button Content="Start" Style="{StaticResource MenuButton}" Click="Start_Click" />
-            <Button Content="Stop" Style="{StaticResource MenuButton}" Click="Stop_Click" />
+            <Button Content="Abort" Style="{StaticResource MenuButton}" Click="Abort_Click" />
             <Button Content="Test" Style="{StaticResource MenuButton}" Click="Test_Click" />
+            <Button Content="Fwd" Style="{StaticResource MenuButton}" Click="Fwd_Click" />
+            <Button Content="90" Style="{StaticResource MenuButton}" Click="Turn90_Click" />
+            <Button Content="-90" Style="{StaticResource MenuButton}" Click="Turn_Minus90" />
+            <Button Content="180" Style="{StaticResource MenuButton}" Click="Turn180_Click" />
+            <Button Content="Back" Style="{StaticResource MenuButton}" Click="Back_Click" />
         </Menu>
         <StatusBar DockPanel.Dock="Bottom">
             <TextBlock Text="{Binding State}" />

@@ -73,7 +73,10 @@ namespace gyro1
         public double RobotY { get { return _RobotY; } set { _RobotY = value; OnPropertyChanged(); } } private double _RobotY = 0;
 
         [Category("Robot")]
-        public double RobotH { get { return _RobotH; } set { _RobotH = value; OnPropertyChanged(); } } private double _RobotH = 0;
+        public double RobotH { get { return _RobotH; } set { _RobotH = value; OnPropertyChanged(); OnPropertyChanged("HeadingInDegrees"); } } private double _RobotH = 0;
+
+        [Category("Robot")]
+        public int HeadingInDegrees { get { return (int)(RobotH * Math.PI / 180.0); } }
 
         [Category("Robot")]
         public RobotState State { get { return _State; } set { _State = value; OnPropertyChanged(); } } private RobotState _State = RobotState.Uninitialized;

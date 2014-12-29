@@ -1,105 +1,157 @@
 ﻿using NKH.MindSqualls;
+using System.Threading;
 
 namespace gyro1
 {
     public class DiIMU : NxtDigitalSensor
     {
-        static byte DeviceAddr = 0xD2;
+        const byte DeviceAddr = 0xD2;
+
+        const int DIMU_GYRO_CTRL_REG1 = 0x20;
+        const int DIMU_GYRO_CTRL_REG2 = 0x21;
+        const int DIMU_GYRO_CTRL_REG3 = 0x22;
+        const int DIMU_GYRO_CTRL_REG4 = 0x23;
+        const int DIMU_GYRO_CTRL_REG5 = 0x24;
+
+        const bool lpfEnable = false;
+
+        float[] divisors = { 114.28571F, 57.142857F, 14.285714F };
+        byte[] rangeCommands = { 0x00, 0x10, 0x30 };
+        float[] ranges = { 250, 500, 2000 };
+
+        int range = 0;
+
+        private object pollDataLock = new object();
+
+        double _GyroZ = 0.0;
+
         public DiIMU() : base()
         {
+            CommandToAddress(DIMU_GYRO_CTRL_REG2, 0x00);   // no high pass filter
+            CommandToAddress(DIMU_GYRO_CTRL_REG3, 0x08);   // no interrupts, date ready
+            CommandToAddress(DIMU_GYRO_CTRL_REG4, (byte)((0x01 << range) + 0x80));   // selected range +++ ???
+            CommandToAddress(DIMU_GYRO_CTRL_REG5, lpfEnable ? 0x02 : 0x00);   // filtering - low pass
+            CommandToAddress(DIMU_GYRO_CTRL_REG1, 0x04);   // Enable Z, Disable power down.
         }
 
-        public double rateZ()
+        public double GyroZ
         {
-
-            byte? lb = ReadByteFromAddress(0x2C);
-            byte? hb = ReadByteFromAddress(0x2D);
-
-
-            return 0.0;
+            get
+            {
+                return _GyroZ;
+            }
         }
 
-
-
-#if false
-        public DiIMU()
-            : base()
+        public override void Poll()
         {
+            if (Brick.IsConnected)
+            {
+                lock (pollDataLock)
+                {
+                    byte? lb = ReadByteFromAddress(0x2C + 0x80);
+                    byte? hb = ReadByteFromAddress(0x2D + 0x80);
+                    if (lb.HasValue && hb.HasValue)
+                        _GyroZ = (hb.Value << 8 + lb.Value) / divisors[range];
+                }
+            }
         }
 
-        public double? XAxisAcceleration()
+        internal byte[] SendN(byte[] request, byte rxDataLength)
         {
-            return XyzAxisAcceleration(XAxisUpper8Bits());
+            Brick.CommLink.LsWrite(sensorPort, request, rxDataLength);
+
+            if (rxDataLength == 0) 
+                return null;
+
+            byte? bytesReady = 0;
+            do
+            {
+                try
+                {
+                    Thread.Sleep(10);
+                    bytesReady = Brick.CommLink.LsGetStatus(sensorPort);
+                }
+                catch (NxtCommunicationProtocolException ex)
+                {
+                    if (ex.errorMessage == NxtErrorMessage.PendingCommunicationTransactionInProgress)
+                    {
+                        bytesReady = 0;
+                        Thread.Sleep(10);
+                        continue;
+                    }
+
+                    if (ex.errorMessage != NxtErrorMessage.CommunicationBusError) 
+                        throw;
+
+                    DoAnyLsWrite();
+
+                    return null;
+                }
+            }
+            while (bytesReady < rxDataLength);
+
+            return Brick.CommLink.LsRead(sensorPort);
         }
 
-        public double? YAxisAcceleration()
+        byte[] Send1(byte[] request)
         {
-            return XyzAxisAcceleration(YAxisUpper8Bits());
+            Brick.CommLink.LsWrite(sensorPort, request, 1);
+
+            while (true)
+            {
+                LsReadDelay();
+                try
+                {
+                    return Brick.CommLink.LsRead(sensorPort);
+                }
+                catch (NxtCommunicationProtocolException ex)
+                {
+                    if (ex.errorMessage == NxtErrorMessage.PendingCommunicationTransactionInProgress) 
+                        continue;
+
+                    if (ex.errorMessage == NxtErrorMessage.CommunicationBusError)
+                    {
+                        Brick.CommLink.LsWrite(sensorPort, request, 1); // Doing a LsWrite() clears the CommunicationBusError from the bus.
+                        continue;
+                    }
+                    throw;
+                }
+            }
+        }        
+
+        void LsReadDelay()
+        {
+            if (this.Brick.CommLink is NxtBluetoothConnection)
+            {
+                Thread.Sleep(lsReadDelayTimeMs);
+            }
         }
 
-        public double? ZAxisAcceleration()
+        void DoAnyLsWrite()
         {
-            return XyzAxisAcceleration(ZAxisUpper8Bits());
+            ReadByteFromAddress(0x42);
         }
 
-        public double scalíng = 9.82 / 200;
-
-        private double? XyzAxisAcceleration(sbyte? xyz)
+        byte? ReadByteFromAddress(byte address)
         {
-            if (!xyz.HasValue) return null;
+            byte[] request = new byte[] { DeviceAddr, address };
 
-            int tmpXyz = xyz.Value;
+            byte[] reply = (this.Brick.CommLink is NxtBluetoothConnection)
+                ? Send1(request)
+                : SendN(request, 1);
 
-            // Reverse the sign.
-            tmpXyz *= -1;
-
-            // Shift 2 bits up.
-            tmpXyz = tmpXyz << 2;
-
-            return scalíng * tmpXyz;
-        }
-
-        public sbyte? XAxisUpper8Bits()
-        {
-            byte? xAxisUpper8 = ReadByteFromAddress(0x42);
-            if (xAxisUpper8.HasValue)
-                return (sbyte)xAxisUpper8.Value;
+            if (reply != null && reply.Length >= 1)
+                return reply[0];
             else
                 return null;
         }
 
-        public sbyte? YAxisUpper8Bits()
+        void CommandToAddress(byte address, byte command)
         {
-            byte? yAxisUpper8 = ReadByteFromAddress(0x43);
-            if (yAxisUpper8.HasValue)
-                return (sbyte)yAxisUpper8.Value;
-            else
-                return null;
+            byte[] request = new byte[] { DeviceAddr, address, command };
+            SendN(request, 0);
         }
-
-        public sbyte? ZAxisUpper8Bits()
-        {
-            byte? zAxisUpper8 = ReadByteFromAddress(0x44);
-            if (zAxisUpper8.HasValue)
-                return (sbyte)zAxisUpper8.Value;
-            else
-                return null;
-        }
-
-        public byte? XAxisLower2Bits()
-        {
-            return ReadByteFromAddress(0x45);
-        }
-
-        public byte? YAxisLower2Bits()
-        {
-            return ReadByteFromAddress(0x46);
-        }
-
-        public byte? ZAxisLower2Bits()
-        {
-            return ReadByteFromAddress(0x47);
-        }
-#endif
     }
 }
+
+ 

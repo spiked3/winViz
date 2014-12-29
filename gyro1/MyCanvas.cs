@@ -25,7 +25,6 @@ namespace gyro1
         public static readonly DependencyProperty ForegroundProperty =
             DependencyProperty.Register("Foreground", typeof(Brush), typeof(MyCanvas), new PropertyMetadata(Brushes.Black));
 
-
         protected override void OnRender(System.Windows.Media.DrawingContext dc)
         {
             dc.DrawRectangle(Background, null, new Rect(0, 0, ActualWidth, ActualHeight));           
@@ -35,6 +34,7 @@ namespace gyro1
             var centerY = ActualHeight / 2;
             var xGrids = centerY / 10;
             var yGrids = centerX / 10;
+
             for (int i = 0; i < xGrids; i++)
             {
                 Pen penToUse = i % 10 == 0 ? gridThickPen : gridPen;
@@ -48,14 +48,32 @@ namespace gyro1
                 dc.DrawLine(penToUse, new Point(centerX + (i * 10), 0), new Point(centerX + (i * 10), ActualHeight));
             }
 
-            // point at 0,0
-            //dc.DrawEllipse(Brushes.Black, null, new Point(centerX, centerY), 5, 5);
+            var t = new FormattedText("Hello World", System.Globalization.CultureInfo.CurrentCulture, System.Windows.FlowDirection.LeftToRight,
+                DefaultFont, 18.0, Foreground);
+            dc.DrawText(t, HelloPoint);
+        }
 
-            //var t = new FormattedText("Hello World", System.Globalization.CultureInfo.CurrentCulture, System.Windows.FlowDirection.LeftToRight,
-            //    DefaultFont, 18.0, Foreground);
-            //dc.DrawText(t, HelloPoint);
+        protected override Size ArrangeOverride(Size arrangeSize)
+        {
+            Point middle = new Point(arrangeSize.Width / 2, arrangeSize.Height / 2);
+
+            foreach (UIElement element in base.InternalChildren)
+            {
+                if (element == null)
+                    continue;
+                double x = 0.0;
+                double y = 0.0;
+                double left = GetLeft(element);
+                if (!double.IsNaN(left))
+                    x = left;
+
+                double top = GetTop(element);
+                if (!double.IsNaN(top))
+                    y = top;
+
+                element.Arrange(new Rect(new Point(middle.X + x, middle.Y + y), element.DesiredSize));
+            }
+            return arrangeSize;
         }
     }
-
-    
 }

@@ -10,16 +10,13 @@ using System.Windows.Threading;
 
 namespace gyro1
 {
-    /// <summary>
-    /// Interaction logic for MainWindow.xaml
-    /// </summary>
     public partial class MainWindow : Window
     {
         private DataModel DataModel { get { return (DataContext as DataModel); } }
 
         static TimeSpan tsFade = new TimeSpan(0, 0, 0, 0, 100);
 
-        Ellipse Robot;
+        Ellipse RobotDot;
 
         public MainWindow()
         {
@@ -32,7 +29,7 @@ namespace gyro1
             };
 
             p.Parse(Environment.GetCommandLineArgs());
-            System.Diagnostics.Trace.WriteLine(string.Format("Startup args: nonxt: {0}", DataModel.Delay));
+            System.Diagnostics.Trace.WriteLine(string.Format("Startup args: delay: {0}", DataModel.Delay));
         }
 
         private void MenuExit_Click(object sender, RoutedEventArgs e)
@@ -74,6 +71,8 @@ namespace gyro1
                 var leftDelta = leftTachoChange * ticksToMM;
                 d.RobotX += leftDelta * Math.Sin(d.RobotH);
                 d.RobotY += leftDelta * Math.Cos(d.RobotH);
+                Trace.WriteLine(string.Format("Pose straight(unexpected) L ticks {0}  L mm {1:F2}  newXY ({2:F2}, {3:F2})",
+                    leftTachoChange, leftDelta, d.RobotX, d.RobotY));
             }
             else
             {
@@ -89,6 +88,9 @@ namespace gyro1
 
                 d.RobotX += radius * Math.Sin(d.RobotH);
                 d.RobotY += radius * Math.Cos(d.RobotH);
+
+                Trace.WriteLine(string.Format("Pose LR ticks ({0}, {1})  LR mm ({2:F2}, {3:F2})  newXY ({4:F2}, {5:F2})",
+                    leftTachoChange, rightTachoChange, leftDelta, rightDelta, d.RobotX, d.RobotY));
             }
 
             d.LastLeftTacho = DataModel.Left.TachoCount.Value;
@@ -99,30 +101,26 @@ namespace gyro1
 
         void NewRobotPose(double X, double Y)
         {
-            var transX = MyCanvas.ActualWidth / 2.0;
-            var transY = MyCanvas.ActualHeight / 2.0;
-
             // fading trail
-            var fadingElipse = new Ellipse { Width = 5, Height = 5, Fill = Brushes.Blue };
-            MyCanvas.Children.Add(fadingElipse);
+            var fadingDot = new Ellipse { Width = 5, Height = 5, Fill = Brushes.Blue, RenderTransform = new TranslateTransform { X = -2.5, Y = -2.5 } };
+            MyCanvas.Children.Add(fadingDot);
             new DispatcherTimer(tsFade, DispatcherPriority.Background, (s, ee) =>
             {
-                fadingElipse.Opacity *= .7;
-                if (fadingElipse.Opacity < .1)
-                    MyCanvas.Children.Remove(fadingElipse);
+                fadingDot.Opacity *= .7;
+                if (fadingDot.Opacity < .1)
+                    MyCanvas.Children.Remove(fadingDot);
             }, Dispatcher).Start();
 
-            MyCanvas.SetLeft(fadingElipse, X / 10 + transX);
-            MyCanvas.SetTop(fadingElipse, Y / 10 + transY);
+            MyCanvas.SetLeft(fadingDot, X / 10);
+            MyCanvas.SetTop(fadingDot, Y / 10);
 
-            // robot
-            if (Robot != null)
-                MyCanvas.Children.Remove(Robot);
+            if (RobotDot != null)
+                MyCanvas.Children.Remove(RobotDot);
 
-            Robot = new Ellipse { Width = 10, Height = 10, Fill = Brushes.Cyan };
-            MyCanvas.Children.Add(Robot);
-            MyCanvas.SetLeft(Robot, X / 10 + transX);
-            MyCanvas.SetTop(Robot, Y / 10 + transY);
+            RobotDot = new Ellipse { Width = 10, Height = 10, Fill = Brushes.Cyan, RenderTransform = new TranslateTransform { X = -5, Y = -5 } };
+            MyCanvas.Children.Add(RobotDot);
+            MyCanvas.SetLeft(RobotDot, X / 10);
+            MyCanvas.SetTop(RobotDot, Y / 10);
 
             MyCanvas.InvalidateVisual();
             Dispatcher.DoEvents();
@@ -180,8 +178,10 @@ namespace gyro1
             DataModel.Bumper1.OnPressed += Bumper1_OnChanged;
             DataModel.Bumper1.OnReleased += Bumper1_OnChanged;
 
+            // +++ i do not think we are getting consistent left and right info by just using left here
+            // but it works really well with both
             DataModel.Left.OnPolled += (s) => { Dispatcher.InvokeAsync(() => { UpdatePose(); }); };
-            //DataModel.Right.OnPolled += (s) => { Dispatcher.InvokeAsync(() => { UpdatePose(); }); };
+            DataModel.Right.OnPolled += (s) => { Dispatcher.InvokeAsync(() => { UpdatePose(); }); };
 
             DataModel.Nxt.InitSensors();
 
@@ -212,13 +212,19 @@ namespace gyro1
 
         private void Start_Click(object sender, RoutedEventArgs e)
         {
+            DataModel.MotorPair.ResetMotorPosition(false);
+            DataModel.RobotX = DataModel.RobotY = DataModel.RobotH = 0.0;
+
+            DataModel.MotorPair.Run(30, 360, 0);
+
+            // +++ turn 180, go back
+
+            DataModel.MotorPair.Run(-30, 1, 0);
         }
 
         private void Abort_Click(object sender, RoutedEventArgs e)
         {
             DataModel.MotorPair.Idle();
-            DataModel.MotorPair.ResetMotorPosition(false);
-            DataModel.RobotX = DataModel.RobotY = DataModel.RobotH = 0.0;
             //DataModel.Right.Run(0, 0);
             //DataModel.Left.Run(0, 0);
         }
@@ -240,7 +246,7 @@ namespace gyro1
 
         private void Fwd_Click(object sender, RoutedEventArgs e)
         {
-            DataModel.MotorPair.Run(50, 0, 0);            
+            DataModel.MotorPair.Run(30, 0, 0);            
         }
 
         private void Turn90_Click(object sender, RoutedEventArgs e)

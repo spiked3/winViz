@@ -49,7 +49,7 @@ namespace gyro1
             }
 
             var t = new FormattedText("Hello World", System.Globalization.CultureInfo.CurrentCulture, System.Windows.FlowDirection.LeftToRight,
-                DefaultFont, 18.0, Foreground);
+                DefaultFont, 18.0, Brushes.Magenta);
             dc.DrawText(t, HelloPoint);
         }
 

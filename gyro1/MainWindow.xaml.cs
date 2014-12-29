@@ -14,7 +14,8 @@ namespace gyro1
     {
         private DataModel DataModel { get { return (DataContext as DataModel); } }
 
-        static TimeSpan tsFade = new TimeSpan(0, 0, 0, 0, 100);
+        readonly TimeSpan tsFade = new TimeSpan(0, 0, 0, 0, 250);
+        const double fadeFactor = .7;
 
         Ellipse RobotDot;
 
@@ -106,8 +107,8 @@ namespace gyro1
             MyCanvas.Children.Add(fadingDot);
             new DispatcherTimer(tsFade, DispatcherPriority.Background, (s, ee) =>
             {
-                fadingDot.Opacity *= .7;
-                if (fadingDot.Opacity < .1)
+                fadingDot.Opacity *= fadeFactor;
+                if (fadingDot.Opacity < .01)
                     MyCanvas.Children.Remove(fadingDot);
             }, Dispatcher).Start();
 
@@ -231,14 +232,11 @@ namespace gyro1
         
         private void Test_Click(object sender, RoutedEventArgs e)
         {
-            var transX = MyCanvas.ActualWidth / 2.0;
-            var transY = MyCanvas.ActualHeight / 2.0;
             double deg2rad = Math.PI / 180.0;
-            var r = 200;
+            var r = 2000;
             for (var angle = 0; angle <= 180; angle += 10)
             {
                 var pose = new Point(Math.Sin(angle * deg2rad) * r, -Math.Cos(angle * deg2rad) * r);
-                //System.Diagnostics.Trace.WriteLine(string.Format("Pose {0:F2}", pose));
                 NewRobotPose(pose.X, pose.Y);
                 System.Threading.Thread.Sleep(50);
             }

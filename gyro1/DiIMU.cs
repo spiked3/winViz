@@ -4,6 +4,23 @@ namespace gyro1
 {
     public class DiIMU : NxtDigitalSensor
     {
+        static byte DeviceAddr = 0xD2;
+        public DiIMU() : base()
+        {
+        }
+
+        public double rateZ()
+        {
+
+            byte? lb = ReadByteFromAddress(0x2C);
+            byte? hb = ReadByteFromAddress(0x2D);
+
+
+            return 0.0;
+        }
+
+
+
 #if false
         public DiIMU()
             : base()

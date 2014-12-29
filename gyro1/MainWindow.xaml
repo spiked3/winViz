@@ -38,7 +38,9 @@
         <local:Console Height="90" DockPanel.Dock="Bottom" />
         <local:NxtPanel DockPanel.Dock="Right" Margin="2" />
         <Border BorderThickness="0,0,2,0" BorderBrush="Black"   >
-            <local:MyCanvas x:Name="MyCanvas" />
+            <local:MyCanvas x:Name="MyCanvas" RenderTransformOrigin="0.5, 0.5" >
+                
+            </local:MyCanvas>
         </Border>
     </DockPanel>
 </Window>

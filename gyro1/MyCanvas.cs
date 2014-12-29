@@ -49,11 +49,11 @@ namespace gyro1
             }
 
             // point at 0,0
-            dc.DrawEllipse(Brushes.Black, null, new Point(centerX, centerY), 5, 5);
+            //dc.DrawEllipse(Brushes.Black, null, new Point(centerX, centerY), 5, 5);
 
-            var t = new FormattedText("Hello World", System.Globalization.CultureInfo.CurrentCulture, System.Windows.FlowDirection.LeftToRight,
-                DefaultFont, 18.0, Foreground);
-            dc.DrawText(t, HelloPoint);
+            //var t = new FormattedText("Hello World", System.Globalization.CultureInfo.CurrentCulture, System.Windows.FlowDirection.LeftToRight,
+            //    DefaultFont, 18.0, Foreground);
+            //dc.DrawText(t, HelloPoint);
         }
     }
 

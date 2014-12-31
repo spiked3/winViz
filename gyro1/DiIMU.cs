@@ -25,7 +25,12 @@ namespace gyro1
 
         double _GyroZ = 0.0;
 
-        public DiIMU() : base()
+        public DiIMU()
+            : base()
+        {
+        }
+
+        internal void InitSensor()
         {
             CommandToAddress(DIMU_GYRO_CTRL_REG2, 0x00);   // no high pass filter
             CommandToAddress(DIMU_GYRO_CTRL_REG3, 0x08);   // no interrupts, date ready
@@ -60,7 +65,7 @@ namespace gyro1
         {
             Brick.CommLink.LsWrite(sensorPort, request, rxDataLength);
 
-            if (rxDataLength == 0) 
+            if (rxDataLength == 0)
                 return null;
 
             byte? bytesReady = 0;
@@ -80,7 +85,7 @@ namespace gyro1
                         continue;
                     }
 
-                    if (ex.errorMessage != NxtErrorMessage.CommunicationBusError) 
+                    if (ex.errorMessage != NxtErrorMessage.CommunicationBusError)
                         throw;
 
                     DoAnyLsWrite();
@@ -106,7 +111,7 @@ namespace gyro1
                 }
                 catch (NxtCommunicationProtocolException ex)
                 {
-                    if (ex.errorMessage == NxtErrorMessage.PendingCommunicationTransactionInProgress) 
+                    if (ex.errorMessage == NxtErrorMessage.PendingCommunicationTransactionInProgress)
                         continue;
 
                     if (ex.errorMessage == NxtErrorMessage.CommunicationBusError)
@@ -117,7 +122,7 @@ namespace gyro1
                     throw;
                 }
             }
-        }        
+        }
 
         void LsReadDelay()
         {
@@ -154,4 +159,3 @@ namespace gyro1
     }
 }
 
- 

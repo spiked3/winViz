@@ -1,4 +1,5 @@
 ﻿using NKH.MindSqualls;
+using NKH.MindSqualls.MotorControl;
 using System;
 using System.Collections.Generic;
 using System.ComponentModel;
@@ -61,6 +62,12 @@ namespace gyro1
         public int TicksPerRevolution { get { return _TicksPerRevolution; } set { _TicksPerRevolution = value; OnPropertyChanged(); } } private int _TicksPerRevolution = 360;
 
         [Category("Robot")]
+        public long CurrentLeftTacho { get { return _CurrentLeftTacho; } set { _CurrentLeftTacho = value; OnPropertyChanged(); } } private long _CurrentLeftTacho = 0L;
+
+        [Category("Robot")]
+        public long CurrentRightTacho { get { return _CurrentRightTacho; } set { _CurrentRightTacho = value; OnPropertyChanged(); } } private long _CurrentRightTacho = 0L;
+
+        [Category("Robot")]
         public long LastLeftTacho { get { return _LastLeftTacho; } set { _LastLeftTacho = value; OnPropertyChanged(); } } private long _LastLeftTacho = 0L;
 
         [Category("Robot")]
@@ -76,7 +83,7 @@ namespace gyro1
         public double RobotH { get { return _RobotH; } set { _RobotH = value; OnPropertyChanged(); OnPropertyChanged("HeadingInDegrees"); } } private double _RobotH = 0;
 
         [Category("Robot")]
-        public int HeadingInDegrees { get { return (int)(RobotH * Math.PI / 180.0); } }
+        public int HeadingInDegrees { get { return (int)(RobotH * 180.0 / Math.PI); } }
 
         [Category("Robot")]
         public RobotState State { get { return _State; } set { _State = value; OnPropertyChanged(); } } private RobotState _State = RobotState.Uninitialized;
@@ -91,16 +98,19 @@ namespace gyro1
 
 
         [Category("NXT")]
-        public NxtMotor Left { get { return _Left; } set { _Left = value; OnPropertyChanged(); } } private NxtMotor _Left;
+        public McNxtMotor Left { get { return _Left; } set { _Left = value; OnPropertyChanged(); } } private McNxtMotor _Left;
 
         [Category("NXT")]
-        public NxtMotor Right { get { return _Right; } set { _Right = value; OnPropertyChanged(); } } private NxtMotor _Right;
+        public McNxtMotor Right { get { return _Right; } set { _Right = value; OnPropertyChanged(); } } private McNxtMotor _Right;
 
         [Category("NXT")]
-        public NxtMotorSync MotorPair { get { return _MotorPair; } set { _MotorPair = value; OnPropertyChanged(); } } NxtMotorSync _MotorPair; 
+        public McNxtMotorSync MotorPair { get { return _MotorPair; } set { _MotorPair = value; OnPropertyChanged(); } } McNxtMotorSync _MotorPair;
 
         [Category("NXT")]
         public NxtTouchSensor Bumper1 { get { return _Bumper1; } set { _Bumper1 = value; OnPropertyChanged(); } } private NxtTouchSensor _Bumper1;
+
+        [Category("NXT")]
+        public DiIMU Imu { get { return _Imu; } set { _Imu = value; OnPropertyChanged(); } } DiIMU _Imu;
 
         [Category("NXT")]
         public float Battery { get { return _Battery; } set { _Battery = value; OnPropertyChanged(); } } private float _Battery = -1f;

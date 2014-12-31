@@ -74,6 +74,8 @@
       <Generator>MSBuild:Compile</Generator>
       <SubType>Designer</SubType>
     </ApplicationDefinition>
+    <Compile Include="JoystickControl.cs" />
+    <Compile Include="MainWindow2.xaml.cs" />
     <Compile Include="Plumbing\Console.xaml.cs">
       <DependentUpon>Console.xaml</DependentUpon>
     </Compile>

@@ -14,10 +14,10 @@ namespace gyro1
     {
         private DataModel DataModel { get { return (DataContext as DataModel); } }
 
-        readonly TimeSpan tsFade = new TimeSpan(0, 0, 0, 0, 250);
-        const double fadeFactor = .7;
+        private readonly TimeSpan tsFade = new TimeSpan(0, 0, 0, 0, 500);
+        private const double fadeFactor = .4;
 
-        Ellipse RobotDot;
+        private Ellipse RobotDot;
 
         public MainWindow()
         {
@@ -46,6 +46,10 @@ namespace gyro1
 
             if (!DataModel.Delay)
                 InitNxt();
+
+            var t = new DispatcherTimer { Interval = new TimeSpan(0, 0, 0, 0, 1000 / 10) };
+            t.Tick += (s, ee) => Dispatcher.Invoke(() => UpdatePose());
+            t.Start();
         }
 
         private void UpdatePose()
@@ -60,50 +64,51 @@ namespace gyro1
 
             double ticksToMM = d.WheelDiameter / d.TicksPerRevolution;
 
-            var leftTachoChange = DataModel.Left.TachoCount.Value - d.LastLeftTacho;
-            var rightTachoChange = DataModel.Right.TachoCount.Value - d.LastRightTacho;
+            int leftTachoChange = (int)(DataModel.CurrentLeftTacho - d.LastLeftTacho);
+            int rightTachoChange = (int)(DataModel.CurrentRightTacho - d.LastRightTacho);
 
-            if (Math.Abs(leftTachoChange) + Math.Abs(rightTachoChange) < .01)
+            if (Math.Abs(leftTachoChange) + Math.Abs(rightTachoChange) < 2)
                 return; // insignificant movement, avoid updating
 
             if (leftTachoChange - rightTachoChange == 0)
             {
                 // straight
-                var leftDelta = leftTachoChange * ticksToMM;
+                double leftDelta = leftTachoChange * ticksToMM;
                 d.RobotX += leftDelta * Math.Sin(d.RobotH);
-                d.RobotY += leftDelta * Math.Cos(d.RobotH);
+                d.RobotY += leftDelta * -Math.Cos(d.RobotH);
                 Trace.WriteLine(string.Format("Pose straight(unexpected) L ticks {0}  L mm {1:F2}  newXY ({2:F2}, {3:F2})",
                     leftTachoChange, leftDelta, d.RobotX, d.RobotY));
             }
             else
             {
                 // turned
-                var leftDelta = leftTachoChange * ticksToMM;
-                var rightDelta = rightTachoChange * ticksToMM;
+                double leftDelta = leftTachoChange * ticksToMM;
+                double rightDelta = rightTachoChange * ticksToMM;
 
-                double tachoHeadingChange = (rightDelta - leftDelta) / d.WheelBase;
+                double tachoAlpha = (rightDelta - leftDelta) / d.WheelBase;
 
-                double radius = leftDelta / tachoHeadingChange;
-                d.RobotH += tachoHeadingChange;
+                double radius = leftDelta / tachoAlpha;
+
+                d.RobotH += tachoAlpha;
                 d.RobotH %= (2 * Math.PI);
 
                 d.RobotX += radius * Math.Sin(d.RobotH);
-                d.RobotY += radius * Math.Cos(d.RobotH);
+                d.RobotY += radius * -Math.Cos(d.RobotH);
 
-                Trace.WriteLine(string.Format("Pose LR ticks ({0}, {1})  LR mm ({2:F2}, {3:F2})  newXY ({4:F2}, {5:F2})",
-                    leftTachoChange, rightTachoChange, leftDelta, rightDelta, d.RobotX, d.RobotY));
+                Trace.WriteLine(string.Format("Pose LR ticks ({0}, {1})  LR mm ({2:F2}, {3:F2})  newXYH ({4:F2}, {5:F2}, {6:F0})",
+                    leftTachoChange, rightTachoChange, leftDelta, rightDelta, d.RobotX, d.RobotY, d.HeadingInDegrees));
             }
 
-            d.LastLeftTacho = DataModel.Left.TachoCount.Value;
-            d.LastRightTacho = DataModel.Right.TachoCount.Value;
+            d.LastLeftTacho = DataModel.CurrentLeftTacho;
+            d.LastRightTacho = DataModel.CurrentRightTacho;
 
             NewRobotPose(DataModel.RobotX, DataModel.RobotY);
         }
 
-        void NewRobotPose(double X, double Y)
+        private void NewRobotPose(double X, double Y)
         {
             // fading trail
-            var fadingDot = new Ellipse { Width = 5, Height = 5, Fill = Brushes.Blue, RenderTransform = new TranslateTransform { X = -2.5, Y = -2.5 } };
+            var fadingDot = new Ellipse { Width = 8, Height = 8, Fill = Brushes.Blue, RenderTransform = new TranslateTransform { X = -4, Y = -4 } };
             MyCanvas.Children.Add(fadingDot);
             new DispatcherTimer(tsFade, DispatcherPriority.Background, (s, ee) =>
             {
@@ -112,86 +117,19 @@ namespace gyro1
                     MyCanvas.Children.Remove(fadingDot);
             }, Dispatcher).Start();
 
-            MyCanvas.SetLeft(fadingDot, X / 10);
-            MyCanvas.SetTop(fadingDot, Y / 10);
+            MyCanvas.SetLeft(fadingDot, X / 100);
+            MyCanvas.SetTop(fadingDot, Y / 100);
 
             if (RobotDot != null)
                 MyCanvas.Children.Remove(RobotDot);
 
             RobotDot = new Ellipse { Width = 10, Height = 10, Fill = Brushes.Cyan, RenderTransform = new TranslateTransform { X = -5, Y = -5 } };
             MyCanvas.Children.Add(RobotDot);
-            MyCanvas.SetLeft(RobotDot, X / 10);
-            MyCanvas.SetTop(RobotDot, Y / 10);
+            MyCanvas.SetLeft(RobotDot, X / 100);
+            MyCanvas.SetTop(RobotDot, Y / 100);
 
             MyCanvas.InvalidateVisual();
             Dispatcher.DoEvents();
-        }
-
-        void InitNxt()
-        {
-            byte p = byte.Parse(ComPort.SelectedValue.ToString().Substring(3));
-            DataModel.Nxt = new NKH.MindSqualls.NxtBrick(NxtCommLinkType.Bluetooth, p);
-            //ViewModel.Nxt = new NKH.MindSqualls.NxtBrick(NxtCommLinkType.USB, 0);
-            try
-            {
-                DataModel.Nxt.Connect();
-            }
-            catch (Exception Ex)
-            {
-                MessageBox.Show(Ex.Message, Ex.GetType().ToString(), MessageBoxButton.OK, MessageBoxImage.Error);
-                return;
-            }
-
-            if (!DataModel.Nxt.IsConnected)
-            {
-                System.Diagnostics.Debugger.Break();
-                MessageBox.Show("Nxt did not connect.", "Error", MessageBoxButton.OK, MessageBoxImage.Error);
-                return;
-            }
-
-            DataModel.State = RobotState.Connected;
-            System.Threading.Thread.Sleep(500);
-
-            DataModel.Nxt.CommLink.StopProgram();
-            System.Threading.Thread.Sleep(500);
-
-            DataModel.Nxt.CommLink.StartProgram("MotorControl22.rxe");
-            System.Threading.Thread.Sleep(500);
-
-            DataModel.Left = new NxtMotor();
-            DataModel.Right = new NxtMotor();
-
-            DataModel.Nxt.CommLink.ResetMotorPosition(NxtMotorPort.PortC, false);
-            DataModel.Nxt.CommLink.ResetMotorPosition(NxtMotorPort.PortA, false);
-
-            DataModel.Bumper1 = new NxtTouchSensor();
-
-            DataModel.Nxt.MotorC = DataModel.Left;
-            DataModel.Nxt.MotorA = DataModel.Right;
-            DataModel.Nxt.Sensor1 = DataModel.Bumper1;
-
-            DataModel.MotorPair = new NxtMotorSync(DataModel.Left, DataModel.Right);
-
-            DataModel.Left.PollInterval = 
-                DataModel.Right.PollInterval = 
-                DataModel.Bumper1.PollInterval = 1000 / 20;
-
-            DataModel.Bumper1.OnPressed += Bumper1_OnChanged;
-            DataModel.Bumper1.OnReleased += Bumper1_OnChanged;
-
-            // +++ i do not think we are getting consistent left and right info by just using left here
-            // but it works really well with both
-            DataModel.Left.OnPolled += (s) => { Dispatcher.InvokeAsync(() => { UpdatePose(); }); };
-            DataModel.Right.OnPolled += (s) => { Dispatcher.InvokeAsync(() => { UpdatePose(); }); };
-
-            DataModel.Nxt.InitSensors();
-
-            DataModel.State = RobotState.Initialized;
-        }
-
-        void Motor_Polled(NxtPollable polledItem)
-        {
-            UpdatePose();
         }
 
         private void Reset_Click(object sender, RoutedEventArgs e)
@@ -202,7 +140,7 @@ namespace gyro1
             InitNxt();
         }
 
-        void Bumper1_OnChanged(NxtSensor sensor)
+        private void Bumper1_OnChanged(NxtSensor sensor)
         {
             System.Diagnostics.Trace.WriteLine("Bumper1_OnPressed");
             Dispatcher.InvokeAsync(() =>
@@ -211,16 +149,30 @@ namespace gyro1
             });
         }
 
-        private void Start_Click(object sender, RoutedEventArgs e)
+        private void ResetTacho()
         {
             DataModel.MotorPair.ResetMotorPosition(false);
+            DataModel.LastLeftTacho = DataModel.LastRightTacho =
+                DataModel.CurrentLeftTacho = DataModel.CurrentRightTacho = 0;
             DataModel.RobotX = DataModel.RobotY = DataModel.RobotH = 0.0;
+        }
 
-            DataModel.MotorPair.Run(30, 360, 0);
+        private void Start_Click(object sender, RoutedEventArgs e)
+        {
+            ResetTacho();
 
-            // +++ turn 180, go back
+            var ticksPerMeter = 1000.0 / (Math.PI * DataModel.WheelDiameter) * DataModel.TicksPerRevolution;
 
-            DataModel.MotorPair.Run(-30, 1, 0);
+            Trace.WriteLine(string.Format("moving straight {0:F0} ticks ({1:F2} revolutions)", ticksPerMeter, ticksPerMeter / 360.0));
+            DataModel.MotorPair.Run(30, (ushort)ticksPerMeter, 0);
+
+            //var halfTurnMM = DataModel.WheelBase * Math.PI / 2.0;
+            //var halfTurnTicks = halfTurnMM / DataModel.WheelDiameter * DataModel.TicksPerRevolution;
+            //Trace.WriteLine(string.Format("turn 180 = {0:F2} mm  = {1} ticks", halfTurnMM, halfTurnTicks));
+
+            //DataModel.MotorPair.Run(40, (ushort)halfTurnTicks, 100);
+
+            //DataModel.MotorPair.Run(30, 360 * 1, 0);
         }
 
         private void Abort_Click(object sender, RoutedEventArgs e)
@@ -229,12 +181,12 @@ namespace gyro1
             //DataModel.Right.Run(0, 0);
             //DataModel.Left.Run(0, 0);
         }
-        
+
         private void Test_Click(object sender, RoutedEventArgs e)
         {
             double deg2rad = Math.PI / 180.0;
-            var r = 2000;
-            for (var angle = 0; angle <= 180; angle += 10)
+            var r = 15000;
+            for (var angle = 0; angle <= 360; angle += 10)
             {
                 var pose = new Point(Math.Sin(angle * deg2rad) * r, -Math.Cos(angle * deg2rad) * r);
                 NewRobotPose(pose.X, pose.Y);
@@ -244,27 +196,32 @@ namespace gyro1
 
         private void Fwd_Click(object sender, RoutedEventArgs e)
         {
-            DataModel.MotorPair.Run(30, 0, 0);            
+            DataModel.MotorPair.Run(30, 0, 0);
         }
 
         private void Turn90_Click(object sender, RoutedEventArgs e)
         {
-
         }
 
         private void Turn_Minus90(object sender, RoutedEventArgs e)
         {
-
         }
 
         private void Turn180_Click(object sender, RoutedEventArgs e)
         {
-
         }
 
         private void Back_Click(object sender, RoutedEventArgs e)
         {
-
         }
-    }    
+
+        private void JoystickControl_JoystickMoved(rChordata.DiamondPoint p)
+        {
+            if (DataModel.Left != null && DataModel.Right != null)
+            {
+                DataModel.Left.Run((sbyte)p.Left, 0);
+                DataModel.Right.Run((sbyte)p.Right, 0);
+            }
+        }
+    }
 }

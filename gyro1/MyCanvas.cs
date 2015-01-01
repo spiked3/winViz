@@ -10,11 +10,13 @@ namespace gyro1
 {
     public class MyCanvas : Canvas
     {
-        Point HelloPoint = new Point(20, 20);
         private Typeface DefaultFont = new Typeface("Verdana");
 
         Pen gridPen = new Pen(new SolidColorBrush(Color.FromArgb(0xff, 0xf0, 0xf0, 0xf0)), 1.0);
         Pen gridThickPen = new Pen(new SolidColorBrush(Color.FromArgb(0xff, 0xf0, 0xf0, 0xf0)), 3.0);
+
+        Point TestTextPoint = new Point(20, 20);
+        FormattedText TestText;
 
         public Brush Foreground
         {
@@ -25,9 +27,15 @@ namespace gyro1
         public static readonly DependencyProperty ForegroundProperty =
             DependencyProperty.Register("Foreground", typeof(Brush), typeof(MyCanvas), new PropertyMetadata(Brushes.Black));
 
+        public MyCanvas()
+        {
+            TestText = new FormattedText("Hello World", System.Globalization.CultureInfo.CurrentCulture, System.Windows.FlowDirection.LeftToRight,
+                DefaultFont, 18.0, Brushes.Magenta);
+        }
+
         protected override void OnRender(System.Windows.Media.DrawingContext dc)
         {
-            dc.DrawRectangle(Background, null, new Rect(0, 0, ActualWidth, ActualHeight));           
+            dc.DrawRectangle(Background, null, new Rect(0, 0, ActualWidth, ActualHeight));
 
             // center of canvas represents 0,0
             var centerX = ActualWidth / 2;
@@ -48,9 +56,7 @@ namespace gyro1
                 dc.DrawLine(penToUse, new Point(centerX + (i * 10), 0), new Point(centerX + (i * 10), ActualHeight));
             }
 
-            var t = new FormattedText("Hello World", System.Globalization.CultureInfo.CurrentCulture, System.Windows.FlowDirection.LeftToRight,
-                DefaultFont, 18.0, Brushes.Magenta);
-            dc.DrawText(t, HelloPoint);
+            dc.DrawText(TestText, TestTextPoint);
         }
 
         protected override Size ArrangeOverride(Size arrangeSize)

@@ -30,7 +30,7 @@ namespace gyro1
         {
         }
 
-        internal void InitSensor()
+        public void InitSensor()
         {
             CommandToAddress(DIMU_GYRO_CTRL_REG2, 0x00);   // no high pass filter
             CommandToAddress(DIMU_GYRO_CTRL_REG3, 0x08);   // no interrupts, date ready

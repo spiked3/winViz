@@ -65,5 +65,18 @@ namespace gyro1
             return VisualTreeHelper.GetParent(child);
         }
 
+        static double d2r = Math.PI / 180.0;
+        static double r2d = 180.0 / Math.PI;
+
+        public static double inRadians(this double deg)
+        {
+            return deg * d2r;
+        }
+
+        public static double inDegrees(this double rad)
+        {
+            return rad * r2d;
+        }
+
     }
 }

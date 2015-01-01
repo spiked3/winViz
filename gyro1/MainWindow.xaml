@@ -24,7 +24,7 @@
                 <MenuItem Header="E_xit" />
             </MenuItem>
             <ComboBox x:Name="ComPort" ItemsSource="{Binding ComPorts}" SelectedIndex="0" Width="72" />
-            <Button Content="Reset" Style="{StaticResource MenuButton}" Click="Reset_Click" />
+            <Button Content="Reset" Style="{StaticResource MenuButton}" Click="ResetTacho" />
             <Button Content="Start" Style="{StaticResource MenuButton}" Click="Start_Click" />
             <Button Content="Abort" Style="{StaticResource MenuButton}" Click="Abort_Click" />
             <Button Content="Test" Style="{StaticResource MenuButton}" Click="Test_Click" />

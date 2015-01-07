@@ -89,11 +89,11 @@ namespace gyro1
 
                 double tachoAlpha = (rightDelta - leftDelta) / DataModel.WheelBase;
 
-                DataModel.RobotH += tachoAlpha;
-                DataModel.RobotH %= (2 * Math.PI);
+                DataModel.RobotX += delta * Math.Sin(DataModel.RobotH + (tachoAlpha / 2.0));
+                DataModel.RobotY += delta * Math.Cos(DataModel.RobotH + (tachoAlpha / 2.0));
 
-                DataModel.RobotX += delta * Math.Sin(DataModel.RobotH);
-                DataModel.RobotY += delta * Math.Cos(DataModel.RobotH);
+                DataModel.RobotH += tachoAlpha; // +++ divided by 2?
+                DataModel.RobotH %= (2 * Math.PI);
 
                 //Trace.WriteLine(string.Format("Pose LR ticks ({0}, {1})  LR mm ({2:F2}, {3:F2})  newXYH ({4:F2}, {5:F2}, {6:F0})",
                 //    leftTachoChange, rightTachoChange, leftDelta, rightDelta, DataModel.RobotX, DataModel.RobotY, DataModel.HeadingInDegrees));
@@ -165,7 +165,7 @@ namespace gyro1
         private void Test_Click(object sender, RoutedEventArgs e)
         {
             double deg2rad = Math.PI / 180.0;
-            var r = 15000;
+            var r = 150;
             for (var angle = 0; angle <= 360; angle += 10)
             {
                 var pose = new Point(Math.Sin(angle * deg2rad) * r, -Math.Cos(angle * deg2rad) * r);

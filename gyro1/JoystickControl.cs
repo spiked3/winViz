@@ -34,11 +34,11 @@ namespace com.spiked3
         public delegate void JoystickMovedEventHandler(DiamondPoint p);
 
         public static readonly DependencyProperty DrawForegroundProperty =
-            DependencyProperty.Register("Foreground", typeof (Brush), typeof (JoystickControl),
+            DependencyProperty.Register("Foreground", typeof(Brush), typeof(JoystickControl),
                 new PropertyMetadata(Brushes.Red));
 
         public static readonly DependencyProperty DiamondPointProperty =
-            DependencyProperty.Register("DiamondPoint", typeof (DiamondPoint), typeof (JoystickControl),
+            DependencyProperty.Register("DiamondPoint", typeof(DiamondPoint), typeof(JoystickControl),
                 new PropertyMetadata(new DiamondPoint(0, 0)));
 
         Point centerPoint;
@@ -58,13 +58,13 @@ namespace com.spiked3
 
         public Brush Foreground
         {
-            get { return (Brush) GetValue(DrawForegroundProperty); }
+            get { return (Brush)GetValue(DrawForegroundProperty); }
             set { SetValue(DrawForegroundProperty, value); }
         }
 
         public DiamondPoint DiamondPoint
         {
-            get { return (DiamondPoint) GetValue(DiamondPointProperty); }
+            get { return (DiamondPoint)GetValue(DiamondPointProperty); }
             set { SetValue(DiamondPointProperty, value); }
         }
 
@@ -77,13 +77,13 @@ namespace com.spiked3
 
         protected override void OnMouseMove(MouseEventArgs e)
         {
-            base.OnMouseMove(e);
+            //base.OnMouseMove(e);
             if (draggingStarted)
             {
                 mouseDraggedLocation = e.GetPosition(this);
                 var p = new DoublePoint(
-                    scale((int) mouseDraggedLocation.X, 0, (int) ActualWidth, 100, -100),
-                    scale((int) mouseDraggedLocation.Y, 0, (int) ActualHeight, 100, -100)
+                    scale((int)mouseDraggedLocation.X, 0, (int)ActualWidth, 100, -100),
+                    scale((int)mouseDraggedLocation.Y, 0, (int)ActualHeight, 100, -100)
                     );
                 DiamondPoint = DiamondToolbox.CartesianToDiamond(p, 100);
 
@@ -96,14 +96,14 @@ namespace com.spiked3
 
         protected override void OnMouseLeftButtonDown(MouseButtonEventArgs e)
         {
-            base.OnMouseLeftButtonDown(e);
+            //base.OnMouseLeftButtonDown(e);
             draggingStarted = true;
             e.Handled = true;
         }
 
         protected override void OnMouseLeftButtonUp(MouseButtonEventArgs e)
         {
-            base.OnMouseLeftButtonUp(e);
+            //base.OnMouseLeftButtonUp(e);
             draggingStarted = false;
             mouseDraggedLocation = centerPoint;
             DiamondPoint = DiamondToolbox.CartesianToDiamond(new DoublePoint(0, 0), 100);
@@ -185,7 +185,7 @@ namespace rChordata
                     else // If the Cartesian point is South of the Diamond ...
                         // Bring it back to the South most point
                         cartPoint.Y = -radius;
-                    // If the Cartesian point is on the X axis ...
+                // If the Cartesian point is on the X axis ...
                 else if (cartPoint.Y == 0)
                     // If the Cartesian point if East of the Diamond ...
                     if (cartPoint.X > 0)
@@ -205,7 +205,7 @@ namespace rChordata
                             new DoublePoint(0, 0), //   to center
                             new DoublePoint(0, radius), // Line from North point
                             new DoublePoint(radius, 0)); //   to East point
-                        // If the Cartesian point is in the Southeast ...
+                    // If the Cartesian point is in the Southeast ...
                     else if (cartPoint.X > 0 && cartPoint.Y < 0)
                         // Move the Cartesian point to the diamond in
                         //   the direction of the center
@@ -215,7 +215,7 @@ namespace rChordata
                             new DoublePoint(0, 0), //   to center
                             new DoublePoint(0, -radius), // Line from South point
                             new DoublePoint(radius, 0)); //   to East point
-                        // If the Cartesian point is in the Southwest ...
+                    // If the Cartesian point is in the Southwest ...
                     else if (cartPoint.X < 0 && cartPoint.Y < 0)
                         // Move the Cartesian point to the diamond in
                         //   the direction of the center
@@ -225,7 +225,7 @@ namespace rChordata
                             new DoublePoint(0, 0), //   to center
                             new DoublePoint(0, -radius), // Line from South point
                             new DoublePoint(-radius, 0)); //   to West point
-                        // If the Cartesian point is in the Northwest ...
+                    // If the Cartesian point is in the Northwest ...
                     else
                         // Move the Cartesian point to the diamond in
                         //   the direction of the center
@@ -418,8 +418,8 @@ namespace rChordata
             intercept1 = -((slope1 * l1p1.X) - l1p1.Y);
             intercept2 = -((slope2 * l2p1.X) - l2p1.Y);
 
-            intersection.X = (int) ((intercept2 - intercept1) / (slope1 - slope2));
-            intersection.Y = (int) ((slope1 * intersection.X) + intercept1);
+            intersection.X = (int)((intercept2 - intercept1) / (slope1 - slope2));
+            intersection.Y = (int)((slope1 * intersection.X) + intercept1);
 
             return intersection;
         }

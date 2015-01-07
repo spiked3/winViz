@@ -1,13 +1,9 @@
 ﻿<Window x:Class="gyro1.MainWindow"
         xmlns="http://schemas.microsoft.com/winfx/2006/xaml/presentation"
         xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
-        xmlns:s3="clr-namespace:com.spiked3"
         xmlns:local="clr-namespace:gyro1"
-        Title="{Binding Title}" Height="768" Width="1024" Loaded="Window_Loaded">
-
-    <Window.DataContext>
-        <local:DataModel />
-    </Window.DataContext>
+        Title="NXT Odometry/Gyro fusion" Height="768" Width="1024" Loaded="Window_Loaded"
+        DataContext="{Binding RelativeSource={RelativeSource Self}}" Closing="Window_Closing">
 
     <Window.Resources>
         <Style x:Key="MenuButton" TargetType="Button">
@@ -24,27 +20,20 @@
                 <MenuItem Header="E_xit" />
             </MenuItem>
             <ComboBox x:Name="ComPort" ItemsSource="{Binding ComPorts}" SelectedIndex="0" Width="72" />
-            <Button Content="Reset" Style="{StaticResource MenuButton}" Click="ResetTacho" />
-            <Button Content="Start" Style="{StaticResource MenuButton}" Click="Start_Click" />
-            <Button Content="Abort" Style="{StaticResource MenuButton}" Click="Abort_Click" />
+            <Button Content="Connect" Style="{StaticResource MenuButton}" Click="Connect_Click" />
+            <Button Content="Start" Style="{StaticResource MenuButton}" />
+            <Button Content="Abort" Style="{StaticResource MenuButton}" />
             <Button Content="Test" Style="{StaticResource MenuButton}" Click="Test_Click" />
-            <Button Content="Fwd" Style="{StaticResource MenuButton}" Click="Fwd_Click" />
-            <Button Content="90" Style="{StaticResource MenuButton}" Click="Turn90_Click" />
-            <Button Content="-90" Style="{StaticResource MenuButton}" Click="Turn_Minus90" />
-            <Button Content="180" Style="{StaticResource MenuButton}" Click="Turn180_Click" />
-            <Button Content="Back" Style="{StaticResource MenuButton}" Click="Back_Click" />
+            <Button Content="Fwd" Style="{StaticResource MenuButton}" />
+            <Button Content="90" Style="{StaticResource MenuButton}" />
+            <Button Content="-90" Style="{StaticResource MenuButton}" />
+            <Button Content="180" Style="{StaticResource MenuButton}" />
+            <Button Content="Back" Style="{StaticResource MenuButton}" />
         </Menu>
 
         <StatusBar DockPanel.Dock="Bottom">
             <TextBlock Text="{Binding State}" />
         </StatusBar>
-
-        <ScrollViewer DockPanel.Dock="Right">
-            <StackPanel Orientation="Vertical">
-                <local:NxtPanel />
-                <s3:JoystickControl Height="160" JoystickMovedListeners="JoystickControl_JoystickMoved" />
-            </StackPanel>
-        </ScrollViewer>
 
         <Grid>
             <Grid.RowDefinitions>

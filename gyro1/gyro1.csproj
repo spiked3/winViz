@@ -34,8 +34,15 @@
     <WarningLevel>4</WarningLevel>
   </PropertyGroup>
   <ItemGroup>
+    <Reference Include="M2Mqtt">
+      <HintPath>..\packages\M2Mqtt.4.0\lib\net45\M2Mqtt.dll</HintPath>
+    </Reference>
     <Reference Include="NDesk.Options">
       <HintPath>..\packages\NDesk.Options.0.2.1\lib\NDesk.Options.dll</HintPath>
+    </Reference>
+    <Reference Include="Newtonsoft.Json, Version=6.0.0.0, Culture=neutral, PublicKeyToken=30ad4fe6b2a6aeed, processorArchitecture=MSIL">
+      <SpecificVersion>False</SpecificVersion>
+      <HintPath>..\packages\Newtonsoft.Json.6.0.7\lib\net45\Newtonsoft.Json.dll</HintPath>
     </Reference>
     <Reference Include="System" />
     <Reference Include="System.Data" />
@@ -74,18 +81,11 @@
       <Generator>MSBuild:Compile</Generator>
       <SubType>Designer</SubType>
     </ApplicationDefinition>
-    <Compile Include="JoystickControl.cs" />
-    <Compile Include="MainWindow2.xaml.cs" />
     <Compile Include="Plumbing\Console.xaml.cs">
       <DependentUpon>Console.xaml</DependentUpon>
     </Compile>
-    <Compile Include="DiIMU.cs" />
     <Compile Include="Plumbing\Extensions.cs" />
     <Compile Include="MyCanvas.cs" />
-    <Compile Include="NxtPanel.xaml.cs">
-      <DependentUpon>NxtPanel.xaml</DependentUpon>
-    </Compile>
-    <Compile Include="DataModel.cs" />
     <Page Include="Plumbing\Console.xaml">
       <SubType>Designer</SubType>
       <Generator>MSBuild:Compile</Generator>
@@ -102,10 +102,6 @@
       <DependentUpon>MainWindow.xaml</DependentUpon>
       <SubType>Code</SubType>
     </Compile>
-    <Page Include="NxtPanel.xaml">
-      <SubType>Designer</SubType>
-      <Generator>MSBuild:Compile</Generator>
-    </Page>
   </ItemGroup>
   <ItemGroup>
     <Compile Include="Properties\AssemblyInfo.cs">

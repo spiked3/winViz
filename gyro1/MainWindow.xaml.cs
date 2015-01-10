@@ -14,6 +14,15 @@ namespace gyro1
 {
     public partial class MainWindow : Window
     {
+        public int RobotH
+        {
+            get { return (int)GetValue(RobotHProperty); }
+            set { SetValue(RobotHProperty, value); }
+        }
+        public static readonly DependencyProperty RobotHProperty =
+            DependencyProperty.Register("RobotH", typeof(int), typeof(MainWindow), new PropertyMetadata(0));
+
+
         public string StatusText
         {
             get { return (string)GetValue(StatusTextProperty); }
@@ -29,6 +38,15 @@ namespace gyro1
         }
         public static readonly DependencyProperty ComPortsProperty =
             DependencyProperty.Register("ComPorts", typeof(List<string>), typeof(MainWindow), new PropertyMetadata(null));
+
+
+        public float DrawScale
+        {
+            get { return (float)GetValue(DrawScaleProperty); }
+            set { SetValue(DrawScaleProperty, value); }
+        }
+        public static readonly DependencyProperty DrawScaleProperty =
+            DependencyProperty.Register("DrawScale", typeof(float), typeof(MainWindow), new PropertyMetadata(1F));
 
         const string Broker = "127.0.0.1";
         public MqttClient Mqtt;
@@ -74,21 +92,29 @@ namespace gyro1
             Mqtt = new MqttClient(Broker);
             Mqtt.MqttMsgPublishReceived += Mqtt_MqttMsgPublishReceived;
             Mqtt.Connect("pc");
-            Mqtt.Subscribe(new[] { "nxt/Pose/#" }, new[] { MqttMsgBase.QOS_LEVEL_EXACTLY_ONCE });
+            Mqtt.Subscribe(new[] { "nxt/#" }, new[] { MqttMsgBase.QOS_LEVEL_EXACTLY_ONCE });
         }
 
         void Mqtt_MqttMsgPublishReceived(object sender, MqttMsgPublishEventArgs e)
         {
-            RobotPose p = JsonConvert.DeserializeObject<RobotPose>(System.Text.Encoding.UTF8.GetString(e.Message));
-
-            Dispatcher.InvokeAsync(() =>
+            switch (e.Topic)
             {
-                NewRobotPose(p.X / 10, p.Y / 10, p.H);
-            });
+                case "nxt/Pose":
+                    RobotPose p = JsonConvert.DeserializeObject<RobotPose>(System.Text.Encoding.UTF8.GetString(e.Message));
+                    Dispatcher.InvokeAsync(() =>
+                    {
+                        NewRobotPose(p.X * DrawScale, p.Y * DrawScale, p.H);
+                    });
+                    break;
+
+                default:
+                    break;
+            }
         }
 
         private void NewRobotPose(double x, double y, double h)
         {
+            RobotH = (int)h.inDegrees();
             // fading trail
             var fadingDot = new Ellipse { Width = 8, Height = 8, Fill = Brushes.Blue, RenderTransform = new TranslateTransform { X = -4, Y = -4 } };
             MyCanvas.Children.Add(fadingDot);
@@ -121,10 +147,10 @@ namespace gyro1
         {
             double deg2rad = Math.PI / 180.0;
             var r = 150;
-            for (var angle = 0; angle <= 360; angle += 10)
+            for (double angle = 0; angle <= 360; angle += 10)
             {
                 var pose = new Point(Math.Sin(angle * deg2rad) * r, -Math.Cos(angle * deg2rad) * r);
-                NewRobotPose(pose.X, pose.Y, 0.0);
+                NewRobotPose(pose.X, pose.Y, (angle +90).inRadians());
                 System.Threading.Thread.Sleep(50);
             }
         }

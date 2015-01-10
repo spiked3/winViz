@@ -1,0 +1,25 @@
+fyi - ROBOTC
+
+// release motors
+	nSyncedMotors = synchNone;
+	bFloatDuringInactiveMotorPWM = true;
+	nMotorPIDSpeedCtrl[LEFT] = mtrNoReg;
+	nMotorPIDSpeedCtrl[RIGHT] = mtrNoReg;
+	motor[LEFT] = 0;
+	motor[RIGHT] = 0;
+	
+	
+//	
+//	
+//	
+//	
+//	
+//	
+//	
+//	
+//	
+//	
+//	
+//	
+//	
+//	

@@ -29,6 +29,8 @@
             <Button Content="-90" Style="{StaticResource MenuButton}" />
             <Button Content="180" Style="{StaticResource MenuButton}" />
             <Button Content="Back" Style="{StaticResource MenuButton}" />
+            <Slider Minimum=".01" Maximum="1" Value="{Binding DrawScale}" Width="128" />
+            <TextBlock Text="{Binding DrawScale}" />
         </Menu>
 
         <StatusBar DockPanel.Dock="Bottom">
@@ -36,18 +38,34 @@
         </StatusBar>
 
         <Grid>
+            <Grid.ColumnDefinitions>
+                <ColumnDefinition Width="95*"/>
+                <ColumnDefinition Width="32*"/>
+            </Grid.ColumnDefinitions>
             <Grid.RowDefinitions>
                 <RowDefinition Height="*" />
                 <RowDefinition Height="240" />
             </Grid.RowDefinitions>
 
-            <local:MyCanvas x:Name="MyCanvas" Grid.Row="0">
+            <local:MyCanvas x:Name="MyCanvas" Grid.Row="0" Grid.ColumnSpan="2">
                 <Ellipse Fill="Black" Canvas.Left="0" Canvas.Top="0" Width="10" Height="10" RenderTransform="1 0 0 1 -5 -5" />
             </local:MyCanvas>
 
             <local:Console Grid.Row="1" />
 
-            <GridSplitter Height="5" Grid.Row="1" VerticalAlignment="Top" ResizeDirection="Rows" HorizontalAlignment="Stretch" />
+            <Grid Width="120" Height="120" HorizontalAlignment="Right" VerticalAlignment="Top" Grid.ColumnSpan="2" Margin="0,12,12,0">
+                <Grid.Effect>
+                    <DropShadowEffect/>
+                </Grid.Effect>
+                <Image Source="Resources/compass.png" />
+                <Image Source="Resources/compass_needle.png" RenderTransformOrigin="0.5,0.5" >
+                    <Image.RenderTransform>
+                            <RotateTransform Angle="{Binding RobotH}"/>
+                    </Image.RenderTransform>
+                </Image>
+            </Grid>
+
+            <GridSplitter Height="5" Grid.Row="1" VerticalAlignment="Top" ResizeDirection="Rows" HorizontalAlignment="Stretch" Grid.ColumnSpan="2" />
         </Grid>
     </DockPanel>
 </Window>

@@ -14,6 +14,14 @@ namespace gyro1
 {
     public partial class MainWindow : Window
     {
+        public string State
+        {
+            get { return (string)GetValue(StateProperty); }
+            set { SetValue(StateProperty, value); }
+        }
+        public static readonly DependencyProperty StateProperty =
+            DependencyProperty.Register("State", typeof(string), typeof(MainWindow), new PropertyMetadata("Initial State"));
+
         public int RobotH
         {
             get { return (int)GetValue(RobotHProperty); }
@@ -46,7 +54,7 @@ namespace gyro1
             set { SetValue(DrawScaleProperty, value); }
         }
         public static readonly DependencyProperty DrawScaleProperty =
-            DependencyProperty.Register("DrawScale", typeof(float), typeof(MainWindow), new PropertyMetadata(1F));
+            DependencyProperty.Register("DrawScale", typeof(float), typeof(MainWindow), new PropertyMetadata(.1F));
 
         const string Broker = "127.0.0.1";
         public MqttClient Mqtt;
@@ -85,6 +93,7 @@ namespace gyro1
 
             if (!NoAuto)
                 Connect();
+            State = "Loaded";
         }
 
         void Connect()
@@ -150,7 +159,7 @@ namespace gyro1
             for (double angle = 0; angle <= 360; angle += 10)
             {
                 var pose = new Point(Math.Sin(angle * deg2rad) * r, -Math.Cos(angle * deg2rad) * r);
-                NewRobotPose(pose.X, pose.Y, (angle +90).inRadians());
+                NewRobotPose(pose.X, pose.Y, (angle + 90).inRadians());
                 System.Threading.Thread.Sleep(50);
             }
         }

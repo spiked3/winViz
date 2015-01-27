@@ -3,6 +3,8 @@ using Newtonsoft.Json;
 using System;
 using System.Collections.Generic;
 using System.Diagnostics;
+using System.Text;
+using System.Threading;
 using System.Windows;
 using System.Windows.Media;
 using System.Windows.Shapes;
@@ -47,13 +49,22 @@ namespace gyro1
         public static readonly DependencyProperty DrawScaleProperty =
             DependencyProperty.Register("DrawScale", typeof(float), typeof(MainWindow), new PropertyMetadata(.1F));
 
+
+
+        public double FadeFactor
+        {
+            get { return (double)GetValue(FadeFactorProperty); }
+            set { SetValue(FadeFactorProperty, value); }
+        }
+
+        // Using a DependencyProperty as the backing store for FadeFactor.  This enables animation, styling, binding, etc...
+        public static readonly DependencyProperty FadeFactorProperty =
+            DependencyProperty.Register("FadeFactor", typeof(double), typeof(MainWindow), new PropertyMetadata(0.7));
+
         const string Broker = "127.0.0.1";
         public MqttClient Mqtt;
 
-        bool NoAuto = false;
-
-        private readonly TimeSpan tsFade = new TimeSpan(0, 0, 0, 0, 500);
-        private const double fadeFactor = .4;
+        private readonly TimeSpan tsFade = new TimeSpan(0, 0, 0, 0, 100);
 
         private Ellipse RobotDot;
 
@@ -75,6 +86,21 @@ namespace gyro1
             Mqtt.Connect("pc");
             Mqtt.Subscribe(new[] { "Pilot/#" }, new[] { MqttMsgBase.QOS_LEVEL_EXACTLY_ONCE });
             State = "MQTT Connected";
+
+            new DispatcherTimer(tsFade, DispatcherPriority.Background, (s, ee) =>
+            {
+                for (int i = FadingDots.Count; i > 0; i--)
+                {
+                    var fadingDot = FadingDots[i - 1];
+                    fadingDot.Opacity *= FadeFactor;
+                    if (fadingDot.Opacity < .01)
+                    {
+                        MyCanvas.Children.Remove(fadingDot);
+                        FadingDots.Remove(fadingDot);
+                    }
+                }
+
+            }, Dispatcher).Start();
         }
 
         void Mqtt_MqttMsgPublishReceived(object sender, MqttMsgPublishEventArgs e)
@@ -94,22 +120,17 @@ namespace gyro1
             }
         }
 
+        List<Ellipse> FadingDots = new List<Ellipse>();
+
         private void NewRobotPose(double x, double y, double h)
         {
-            RobotH = (int)h.inDegrees();
+            RobotH = (int)h.inDegrees();    // for compass
+
             // fading trail
             var fadingDot = new Ellipse { Width = 8, Height = 8, Fill = Brushes.Blue, RenderTransform = new TranslateTransform { X = -4, Y = -4 } };
-            MyCanvas.Children.Add(fadingDot);
-            new DispatcherTimer(tsFade, DispatcherPriority.Background, (s, ee) =>
-            {
-                fadingDot.Opacity *= fadeFactor;
-                if (fadingDot.Opacity < .01)
-                {
-                    MyCanvas.Children.Remove(fadingDot);
-                    ((DispatcherTimer)s).Stop();
-                }
-            }, fadingDot.Dispatcher).Start();
 
+            MyCanvas.Children.Add(fadingDot);
+            FadingDots.Add(fadingDot);
             MyCanvas.SetLeft(fadingDot, x);
             MyCanvas.SetTop(fadingDot, y);
 
@@ -120,27 +141,36 @@ namespace gyro1
             MyCanvas.Children.Add(RobotDot);
             MyCanvas.SetLeft(RobotDot, x);
             MyCanvas.SetTop(RobotDot, y);
-
-            MyCanvas.InvalidateVisual();
-            Dispatcher.DoEvents();
         }
 
-        private void Test_Click(object sender, RoutedEventArgs e)
+        private void TestG_Click(object sender, RoutedEventArgs e)
         {
-            double deg2rad = Math.PI / 180.0;
-            var r = 150;
-            for (double angle = 0; angle <= 360; angle += 10)
+            const double deg2rad = Math.PI / 180.0;
+            const double r = 150.0;
+
+            new Thread(new ThreadStart(() =>
             {
-                var pose = new Point(Math.Sin(angle * deg2rad) * r, -Math.Cos(angle * deg2rad) * r);
-                NewRobotPose(pose.X, pose.Y, (angle + 90).inRadians());
-                System.Threading.Thread.Sleep(50);
-            }
+                for (double angle = 0; angle <= 360; angle += 10)
+                {
+                    var pose = new Point(Math.Cos(angle * deg2rad) * r, -Math.Sin(angle * deg2rad) * r);
+                    MyCanvas.Dispatcher.InvokeAsync(() =>
+                    {
+                        NewRobotPose(pose.X, pose.Y, (angle - 180).inRadians());
+                    });
+                    System.Threading.Thread.Sleep(50);
+                }
+            })).Start();
         }
 
         private void Window_Closing(object sender, System.ComponentModel.CancelEventArgs e)
         {
             if (Mqtt != null && Mqtt.IsConnected)
                 Mqtt.Disconnect();
+        }
+
+        private void TestP_Click(object sender, RoutedEventArgs e)
+        {
+            Mqtt.Publish("Test", Encoding.UTF8.GetBytes("test123"));
         }
     }
 

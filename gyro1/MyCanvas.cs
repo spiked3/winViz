@@ -59,6 +59,7 @@ namespace gyro1
             dc.DrawText(TestText, TestTextPoint);
         }
 
+        // sets up the middle as coordinate 0,0, up is +Y, right is +X
         protected override Size ArrangeOverride(Size arrangeSize)
         {
             Point middle = new Point(arrangeSize.Width / 2, arrangeSize.Height / 2);
@@ -69,6 +70,7 @@ namespace gyro1
                     continue;
                 double x = 0.0;
                 double y = 0.0;
+
                 double left = GetLeft(element);
                 if (!double.IsNaN(left))
                     x = left;
@@ -77,8 +79,9 @@ namespace gyro1
                 if (!double.IsNaN(top))
                     y = top;
 
-                element.Arrange(new Rect(new Point(middle.X + x, middle.Y + y), element.DesiredSize));
+                element.Arrange(new Rect(new Point(middle.X + x, middle.Y - y), element.DesiredSize));
             }
+
             return arrangeSize;
         }
     }

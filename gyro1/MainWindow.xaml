@@ -2,7 +2,7 @@
         xmlns="http://schemas.microsoft.com/winfx/2006/xaml/presentation"
         xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
         xmlns:local="clr-namespace:gyro1"
-        Title="NXT Odometry/Gyro fusion" Height="768" Width="1024" Loaded="Window_Loaded"
+        Title="NXT Odometry/Gyro fusion" Height="960" Width="1280" Loaded="Window_Loaded"
         DataContext="{Binding RelativeSource={RelativeSource Self}}" Closing="Window_Closing">
 
     <Window.Resources>
@@ -21,7 +21,8 @@
             </MenuItem>
             <Button Content="Start" Style="{StaticResource MenuButton}" />
             <Button Content="Abort" Style="{StaticResource MenuButton}" />
-            <Button Content="Test" Style="{StaticResource MenuButton}" Click="Test_Click" />
+            <Button Content="TestG" Style="{StaticResource MenuButton}" Click="TestG_Click" />
+            <Button Content="TestP" Style="{StaticResource MenuButton}" Click="TestP_Click" />
             <Button Content="Fwd" Style="{StaticResource MenuButton}" />
             <Button Content="90" Style="{StaticResource MenuButton}" />
             <Button Content="-90" Style="{StaticResource MenuButton}" />
@@ -31,6 +32,10 @@
                     SmallChange=".05" LargeChange=".2" TickFrequency=".05" 
                     IsSnapToTickEnabled="True" TickPlacement="TopLeft" Width="128" />
             <TextBlock Text="{Binding DrawScale}" />
+            <Slider Minimum=".75" Maximum="1" Value="{Binding FadeFactor}" 
+                    SmallChange=".05" LargeChange=".2" TickFrequency=".05" 
+                    IsSnapToTickEnabled="True" TickPlacement="TopLeft" Width="128" />
+            <TextBlock Text="{Binding FadeFactor}" />
         </Menu>
 
         <StatusBar DockPanel.Dock="Bottom">

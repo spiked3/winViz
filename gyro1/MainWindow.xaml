@@ -19,8 +19,6 @@
                 <Separator />
                 <MenuItem Header="E_xit" />
             </MenuItem>
-            <ComboBox x:Name="ComPort" ItemsSource="{Binding ComPorts}" SelectedIndex="0" Width="72" />
-            <Button Content="Connect" Style="{StaticResource MenuButton}" Click="Connect_Click" />
             <Button Content="Start" Style="{StaticResource MenuButton}" />
             <Button Content="Abort" Style="{StaticResource MenuButton}" />
             <Button Content="Test" Style="{StaticResource MenuButton}" Click="Test_Click" />

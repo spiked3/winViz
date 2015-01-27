@@ -39,15 +39,6 @@ namespace gyro1
         public static readonly DependencyProperty StatusTextProperty =
             DependencyProperty.Register("StatusText", typeof(string), typeof(MainWindow), new PropertyMetadata("StatusText"));
 
-        public List<string> ComPorts
-        {
-            get { return (List<string>)GetValue(ComPortsProperty); }
-            set { SetValue(ComPortsProperty, value); }
-        }
-        public static readonly DependencyProperty ComPortsProperty =
-            DependencyProperty.Register("ComPorts", typeof(List<string>), typeof(MainWindow), new PropertyMetadata(null));
-
-
         public float DrawScale
         {
             get { return (float)GetValue(DrawScaleProperty); }
@@ -69,15 +60,6 @@ namespace gyro1
         public MainWindow()
         {
             InitializeComponent();
-
-            // command line
-            var p = new OptionSet
-            {
-   	            { "noauto", v => NoAuto = v != null},
-            };
-
-            p.Parse(Environment.GetCommandLineArgs());
-            System.Diagnostics.Trace.WriteLine(string.Format("Startup args; NoAuto {0}", NoAuto));
         }
 
         private void MenuExit_Click(object sender, RoutedEventArgs e)
@@ -87,28 +69,19 @@ namespace gyro1
 
         private void Window_Loaded(object sender, RoutedEventArgs e)
         {
-            // enumerate com ports
-            ComPorts = new List<string>(System.IO.Ports.SerialPort.GetPortNames());
-            ComPort.SelectedValue = "COM14"; // default
-
-            if (!NoAuto)
-                Connect();
-            State = "Loaded";
-        }
-
-        void Connect()
-        {
+            State = "MQTT Connecting ...";
             Mqtt = new MqttClient(Broker);
             Mqtt.MqttMsgPublishReceived += Mqtt_MqttMsgPublishReceived;
             Mqtt.Connect("pc");
-            Mqtt.Subscribe(new[] { "nxt/#" }, new[] { MqttMsgBase.QOS_LEVEL_EXACTLY_ONCE });
+            Mqtt.Subscribe(new[] { "Pilot/#" }, new[] { MqttMsgBase.QOS_LEVEL_EXACTLY_ONCE });
+            State = "MQTT Connected";
         }
 
         void Mqtt_MqttMsgPublishReceived(object sender, MqttMsgPublishEventArgs e)
         {
             switch (e.Topic)
             {
-                case "nxt/Pose":
+                case "Pilot/Pose":
                     RobotPose p = JsonConvert.DeserializeObject<RobotPose>(System.Text.Encoding.UTF8.GetString(e.Message));
                     Dispatcher.InvokeAsync(() =>
                     {
@@ -162,11 +135,6 @@ namespace gyro1
                 NewRobotPose(pose.X, pose.Y, (angle + 90).inRadians());
                 System.Threading.Thread.Sleep(50);
             }
-        }
-
-        private void Connect_Click(object sender, RoutedEventArgs e)
-        {
-            Connect();
         }
 
         private void Window_Closing(object sender, System.ComponentModel.CancelEventArgs e)

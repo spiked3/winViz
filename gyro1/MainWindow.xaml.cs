@@ -62,11 +62,12 @@ namespace gyro1
             DependencyProperty.Register("FadeFactor", typeof(double), typeof(MainWindow), new PropertyMetadata(0.7));
 
         const string Broker = "127.0.0.1";
-        public MqttClient Mqtt;
+        MqttClient Mqtt;
 
-        private readonly TimeSpan tsFade = new TimeSpan(0, 0, 0, 0, 100);
+        readonly TimeSpan tsFade = new TimeSpan(0, 0, 0, 0, 100);
 
-        private Ellipse RobotDot;
+        Ellipse RobotDot;
+        List<Ellipse> FadingDots = new List<Ellipse>();
 
         public MainWindow()
         {
@@ -86,6 +87,7 @@ namespace gyro1
             Mqtt.Connect("pc");
             Mqtt.Subscribe(new[] { "Pilot/#" }, new[] { MqttMsgBase.QOS_LEVEL_EXACTLY_ONCE });
             State = "MQTT Connected";
+            Trace.WriteLine("MQTT Connected");
 
             new DispatcherTimer(tsFade, DispatcherPriority.Background, (s, ee) =>
             {
@@ -105,6 +107,7 @@ namespace gyro1
 
         void Mqtt_MqttMsgPublishReceived(object sender, MqttMsgPublishEventArgs e)
         {
+            //Trace.WriteLine(string.Format("Mqtt_MqttMsgPublishReceived: {0}", e.Topic));
             switch (e.Topic)
             {
                 case "Pilot/Pose":
@@ -119,8 +122,6 @@ namespace gyro1
                     break;
             }
         }
-
-        List<Ellipse> FadingDots = new List<Ellipse>();
 
         private void NewRobotPose(double x, double y, double h)
         {
@@ -145,6 +146,7 @@ namespace gyro1
 
         private void TestG_Click(object sender, RoutedEventArgs e)
         {
+            Trace.WriteLine("TestG_Click");
             const double deg2rad = Math.PI / 180.0;
             const double r = 150.0;
 
@@ -170,7 +172,8 @@ namespace gyro1
 
         private void TestP_Click(object sender, RoutedEventArgs e)
         {
-            Mqtt.Publish("Test", Encoding.UTF8.GetBytes("test123"));
+            Trace.WriteLine("TestP_Click");
+            Mqtt.Publish("PC/Test123", Encoding.UTF8.GetBytes("{Test123}"));
         }
 
         private void Exit_Click(object sender, RoutedEventArgs e)

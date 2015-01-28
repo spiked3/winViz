@@ -29,8 +29,8 @@ namespace gyro1
 
         public MyCanvas()
         {
-            TestText = new FormattedText("Gyro1", System.Globalization.CultureInfo.CurrentCulture, System.Windows.FlowDirection.LeftToRight,
-                DefaultFont, 18.0, Brushes.Black);
+            TestText = new FormattedText("spiked3.com", System.Globalization.CultureInfo.CurrentCulture, System.Windows.FlowDirection.LeftToRight,
+                DefaultFont, 18.0, Brushes.Orange);
         }
 
         protected override void OnRender(System.Windows.Media.DrawingContext dc)

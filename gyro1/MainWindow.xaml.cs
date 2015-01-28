@@ -172,6 +172,11 @@ namespace gyro1
         {
             Mqtt.Publish("Test", Encoding.UTF8.GetBytes("test123"));
         }
+
+        private void Exit_Click(object sender, RoutedEventArgs e)
+        {
+            Close();
+        }
     }
 
     public class RobotPose

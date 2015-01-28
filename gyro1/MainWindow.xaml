@@ -12,31 +12,61 @@
         </Style>
     </Window.Resources>
 
-    <DockPanel LastChildFill="True">
-
-        <Menu DockPanel.Dock="Top">
-            <MenuItem Header="_File" Click="MenuExit_Click">
-                <Separator />
-                <MenuItem Header="E_xit" />
-            </MenuItem>
-            <Button Content="Start" Style="{StaticResource MenuButton}" />
-            <Button Content="Abort" Style="{StaticResource MenuButton}" />
-            <Button Content="TestG" Style="{StaticResource MenuButton}" Click="TestG_Click" />
-            <Button Content="TestP" Style="{StaticResource MenuButton}" Click="TestP_Click" />
-            <Button Content="Fwd" Style="{StaticResource MenuButton}" />
-            <Button Content="90" Style="{StaticResource MenuButton}" />
-            <Button Content="-90" Style="{StaticResource MenuButton}" />
-            <Button Content="180" Style="{StaticResource MenuButton}" />
-            <Button Content="Back" Style="{StaticResource MenuButton}" />
-            <Slider Minimum=".05" Maximum=".5" Value="{Binding DrawScale}" 
-                    SmallChange=".05" LargeChange=".2" TickFrequency=".05" 
-                    IsSnapToTickEnabled="True" TickPlacement="TopLeft" Width="128" />
-            <TextBlock Text="{Binding DrawScale}" />
-            <Slider Minimum=".75" Maximum="1" Value="{Binding FadeFactor}" 
-                    SmallChange=".05" LargeChange=".2" TickFrequency=".05" 
-                    IsSnapToTickEnabled="True" TickPlacement="TopLeft" Width="128" />
-            <TextBlock Text="{Binding FadeFactor}" />
-        </Menu>
+    <DockPanel LastChildFill="True" >
+        <Ribbon DockPanel.Dock="Top" Height="132" >
+            <Ribbon.ApplicationMenu>
+                <RibbonApplicationMenu>
+                    <RibbonMenuItem Header="Exit" ImageSource="Images/Power.png" Click="Exit_Click" />
+                </RibbonApplicationMenu>
+            </Ribbon.ApplicationMenu>
+            <RibbonGroup Header="Main">
+                <RibbonButton Label="Reset"  LargeImageSource="Images/Command-Reset.png" />
+            </RibbonGroup>
+            <RibbonGroup Header="Test">
+                <StackPanel Orientation="Horizontal">
+                    <RibbonButton Label="Graphics"  LargeImageSource="Images/Pie-Chart.png" Click="TestG_Click" />
+                    <RibbonButton Label="MQTT"  LargeImageSource="Images/Chat - Next-01.png" Click="TestP_Click" />
+                </StackPanel>
+            </RibbonGroup>
+            <RibbonGroup Header="Move">
+                <StackPanel Orientation="Horizontal">
+                    <RibbonButton Label="Forward"  LargeImageSource="Images/Road-Forward.png" />
+                    <RibbonButton Label="Left"  LargeImageSource="Images/Road-Left.png" />
+                    <RibbonButton Label="Right"  LargeImageSource="Images/Road-Right.png" />
+                    <RibbonButton Label="Back"  LargeImageSource="Images/Road-Backward.png" />
+                    <RibbonButton Label="U-Turn"  LargeImageSource="Images/U-turn.png" />
+                </StackPanel>
+            </RibbonGroup>
+            <RibbonGroup Header="Options">
+                <RibbonGroup.Resources>
+                    <Style TargetType="TextBlock">
+                        <Setter Property="HorizontalAlignment" Value="Center" />
+                    </Style>
+                </RibbonGroup.Resources>
+                <Grid Width="96">
+                    <Grid.ColumnDefinitions>
+                        <ColumnDefinition />
+                        <ColumnDefinition />
+                    </Grid.ColumnDefinitions>
+                    <Grid.RowDefinitions>
+                        <RowDefinition />
+                        <RowDefinition />
+                        <RowDefinition />
+                        <RowDefinition />
+                    </Grid.RowDefinitions>
+                    <TextBlock Text="Zoom" Grid.Row="0" Grid.Column="0" />
+                    <TextBlock Text="{Binding DrawScale,FallbackValue=99.9}" Grid.Row="0" Grid.Column="1" />
+                    <Slider Minimum=".05" Maximum=".5" Value="{Binding DrawScale}"
+                    SmallChange=".05" LargeChange=".2" TickFrequency=".05"
+                    IsSnapToTickEnabled="True" TickPlacement="TopLeft" Grid.Row="1" Grid.ColumnSpan="2" />
+                    <TextBlock Text="Fade" Grid.Row="2" Grid.Column="0" />
+                    <TextBlock Text="{Binding FadeFactor,FallbackValue=99.9}" Grid.Row="2" Grid.Column="1" />
+                    <Slider Minimum=".50" Maximum="1" Value="{Binding FadeFactor}"
+                    SmallChange=".05" LargeChange=".2" TickFrequency=".05"
+                    IsSnapToTickEnabled="True" TickPlacement="TopLeft" Grid.Row="3" Grid.ColumnSpan="2" />
+                </Grid>
+            </RibbonGroup>
+        </Ribbon>
 
         <StatusBar DockPanel.Dock="Bottom">
             <TextBlock Text="{Binding State}" />
@@ -44,8 +74,8 @@
 
         <Grid>
             <Grid.ColumnDefinitions>
-                <ColumnDefinition Width="95*"/>
-                <ColumnDefinition Width="32*"/>
+                <ColumnDefinition Width="95*" />
+                <ColumnDefinition Width="32*" />
             </Grid.ColumnDefinitions>
             <Grid.RowDefinitions>
                 <RowDefinition Height="*" />
@@ -60,16 +90,15 @@
 
             <Grid Grid.Row="1" Grid.Column="1">
                 <Grid.Effect>
-                    <DropShadowEffect/>
+                    <DropShadowEffect />
                 </Grid.Effect>
-                <Image Source="Resources/compass4.png" RenderTransformOrigin="0.5,0.5" />
-                
-                <Image Source="Resources/compass_needle.png" RenderTransformOrigin="0.5,0.5" >
-                        <Image.RenderTransform>
-                            <RotateTransform Angle="{Binding RobotH}"/>
-                        </Image.RenderTransform>
-                    </Image>
+                <Image Source="Images/compass4.png" RenderTransformOrigin="0.5,0.5" />
 
+                <Image Source="Images/compass_needle.png" RenderTransformOrigin="0.5,0.5">
+                    <Image.RenderTransform>
+                        <RotateTransform Angle="{Binding RobotH}" />
+                    </Image.RenderTransform>
+                </Image>
             </Grid>
 
             <GridSplitter Height="5" Grid.Row="1" VerticalAlignment="Top" ResizeDirection="Rows" HorizontalAlignment="Stretch" Grid.ColumnSpan="2" />

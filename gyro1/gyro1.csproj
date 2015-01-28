@@ -46,6 +46,7 @@
     </Reference>
     <Reference Include="System" />
     <Reference Include="System.Data" />
+    <Reference Include="System.Windows.Controls.Ribbon" />
     <Reference Include="System.Xml" />
     <Reference Include="Microsoft.CSharp" />
     <Reference Include="System.Core" />
@@ -132,11 +133,25 @@
     <None Include="App.config" />
   </ItemGroup>
   <ItemGroup>
-    <Resource Include="Resources\compass.png" />
-    <Resource Include="Resources\compass_needle.png" />
+    <Resource Include="Images\compass.png" />
+    <Resource Include="Images\compass_needle.png" />
   </ItemGroup>
   <ItemGroup>
-    <Resource Include="Resources\compass4.png" />
+    <Resource Include="Images\compass4.png" />
+  </ItemGroup>
+  <ItemGroup>
+    <Resource Include="Images\Chat - Next-01.png" />
+    <Resource Include="Images\Command-Reset.png" />
+    <Resource Include="Images\Media-Pause.png" />
+    <Resource Include="Images\Media-Play.png" />
+    <Resource Include="Images\Pie-Chart.png" />
+    <Resource Include="Images\Power.png" />
+    <Resource Include="Images\Road-Backward.png" />
+    <Resource Include="Images\Road-Forward.png" />
+    <Resource Include="Images\Road-Left.png" />
+    <Resource Include="Images\Road-Right.png" />
+    <Resource Include="Images\Stop Media.png" />
+    <Resource Include="Images\U-turn.png" />
   </ItemGroup>
   <Import Project="$(MSBuildToolsPath)\Microsoft.CSharp.targets" />
   <!-- To modify your build process, add your task inside one of the targets below and uncomment it. 

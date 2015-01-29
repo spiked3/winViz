@@ -118,6 +118,11 @@ namespace gyro1
                     });
                     break;
 
+                case "Pilot/Log":
+                    string t = System.Text.Encoding.UTF8.GetString(e.Message);
+                    Trace.WriteLine(t, "+");
+                    break;
+
                 default:
                     break;
             }
@@ -173,7 +178,7 @@ namespace gyro1
         private void TestP_Click(object sender, RoutedEventArgs e)
         {
             Trace.WriteLine("TestP_Click");
-            Mqtt.Publish("PC/Test123", Encoding.UTF8.GetBytes("{Test123}"));
+            Mqtt.Publish("PC/Test", Encoding.UTF8.GetBytes("{Test123}"));
         }
 
         private void Exit_Click(object sender, RoutedEventArgs e)

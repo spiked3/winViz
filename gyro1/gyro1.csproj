@@ -82,6 +82,7 @@
       <Generator>MSBuild:Compile</Generator>
       <SubType>Designer</SubType>
     </ApplicationDefinition>
+    <Compile Include="Extensions.cs" />
     <Compile Include="Plumbing\Console.xaml.cs">
       <DependentUpon>Console.xaml</DependentUpon>
     </Compile>

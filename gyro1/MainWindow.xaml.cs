@@ -81,6 +81,7 @@ namespace gyro1
 
         private void Window_Loaded(object sender, RoutedEventArgs e)
         {
+            Trace.WriteLine("S3 Gyro1 Encoder/Gyro Fusion 0.9 © 2015 spiked3.com", "+");
             State = "MQTT Connecting ...";
             Mqtt = new MqttClient(Broker);
             Mqtt.MqttMsgPublishReceived += Mqtt_MqttMsgPublishReceived;
@@ -120,7 +121,7 @@ namespace gyro1
 
                 case "Pilot/Log":
                     string t = System.Text.Encoding.UTF8.GetString(e.Message);
-                    Trace.WriteLine(t, "+");
+                    Trace.WriteLine(t, "1");
                     break;
 
                 default:

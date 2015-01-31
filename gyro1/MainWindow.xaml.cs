@@ -18,14 +18,6 @@ namespace gyro1
 {
     public partial class MainWindow : Window
     {
-        public int MessageLevel
-        {
-            get { return (int)GetValue(MessageLevelProperty); }
-            set { SetValue(MessageLevelProperty, value); }
-        }
-        public static readonly DependencyProperty MessageLevelProperty =
-            DependencyProperty.Register("MessageLevel", typeof(int), typeof(MainWindow), new PropertyMetadata(1));
-
         public string State
         {
             get { return (string)GetValue(StateProperty); }
@@ -198,14 +190,9 @@ namespace gyro1
             Close();
         }
 
-        private void Slider_ValueChanged(object sender, RoutedPropertyChangedEventArgs<double> e)
-        {
-            spiked3.Console.MessageLevel = (int)e.NewValue;
-        }
-
         private void ConsoleTest_Click(object sender, RoutedEventArgs e)
         {
-            spiked3.Console.Test();
+            console1.Test();
         }
     }
 

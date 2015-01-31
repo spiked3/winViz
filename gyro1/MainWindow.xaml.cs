@@ -12,6 +12,8 @@ using System.Windows.Threading;
 using uPLibrary.Networking.M2Mqtt;
 using uPLibrary.Networking.M2Mqtt.Messages;
 
+using spiked3;
+
 namespace gyro1
 {
     public partial class MainWindow : Window

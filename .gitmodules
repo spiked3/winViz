@@ -1,3 +1,6 @@
 [submodule "plumbing"]
 	path = plumbing
 	url = //JEFF/Git2/Plumbing.git
+[submodule "gyro1/Plumbing"]
+	path = gyro1/Plumbing
+	url = //JEFF/Git2/Plumbing.git

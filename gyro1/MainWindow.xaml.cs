@@ -18,6 +18,14 @@ namespace gyro1
 {
     public partial class MainWindow : Window
     {
+        public int MessageLevel
+        {
+            get { return (int)GetValue(MessageLevelProperty); }
+            set { SetValue(MessageLevelProperty, value); }
+        }
+        public static readonly DependencyProperty MessageLevelProperty =
+            DependencyProperty.Register("MessageLevel", typeof(int), typeof(MainWindow), new PropertyMetadata(1));
+
         public string State
         {
             get { return (string)GetValue(StateProperty); }
@@ -83,6 +91,7 @@ namespace gyro1
 
         private void Window_Loaded(object sender, RoutedEventArgs e)
         {
+            spiked3.Console.MessageLevel = 1;
             Trace.WriteLine("S3 Gyro1 Encoder/Gyro Fusion 0.9 © 2015 spiked3.com", "+");
             State = "MQTT Connecting ...";
             Mqtt = new MqttClient(Broker);
@@ -90,7 +99,7 @@ namespace gyro1
             Mqtt.Connect("pc");
             Mqtt.Subscribe(new[] { "Pilot/#" }, new[] { MqttMsgBase.QOS_LEVEL_EXACTLY_ONCE });
             State = "MQTT Connected";
-            Trace.WriteLine("MQTT Connected");
+            Trace.WriteLine("MQTT Connected", "1");
 
             new DispatcherTimer(tsFade, DispatcherPriority.Background, (s, ee) =>
             {
@@ -110,7 +119,7 @@ namespace gyro1
 
         void Mqtt_MqttMsgPublishReceived(object sender, MqttMsgPublishEventArgs e)
         {
-            //Trace.WriteLine(string.Format("Mqtt_MqttMsgPublishReceived: {0}", e.Topic));
+            Trace.WriteLine(string.Format("Mqtt_MqttMsgPublishReceived: {0}", e.Topic), "3");
             switch (e.Topic)
             {
                 case "Pilot/Pose":
@@ -123,7 +132,7 @@ namespace gyro1
 
                 case "Pilot/Log":
                     string t = System.Text.Encoding.UTF8.GetString(e.Message);
-                    Trace.WriteLine(t, "1");
+                    Trace.WriteLine(t);
                     break;
 
                 default:
@@ -154,7 +163,7 @@ namespace gyro1
 
         private void TestG_Click(object sender, RoutedEventArgs e)
         {
-            Trace.WriteLine("TestG_Click");
+            Trace.WriteLine("TestG_Click", "1");
             const double deg2rad = Math.PI / 180.0;
             const double r = 150.0;
 
@@ -180,13 +189,23 @@ namespace gyro1
 
         private void TestP_Click(object sender, RoutedEventArgs e)
         {
-            Trace.WriteLine("TestP_Click");
+            Trace.WriteLine("TestP_Click", "1");
             Mqtt.Publish("PC/Test", Encoding.UTF8.GetBytes("{Test123}"));
         }
 
         private void Exit_Click(object sender, RoutedEventArgs e)
         {
             Close();
+        }
+
+        private void Slider_ValueChanged(object sender, RoutedPropertyChangedEventArgs<double> e)
+        {
+            spiked3.Console.MessageLevel = (int)e.NewValue;
+        }
+
+        private void ConsoleTest_Click(object sender, RoutedEventArgs e)
+        {
+            spiked3.Console.Test();
         }
     }
 

@@ -32,7 +32,8 @@
             </RibbonGroup>
             <RibbonGroup Header="Move">
                 <StackPanel Orientation="Horizontal">
-                    <RibbonButton Label="Forward"  LargeImageSource="Images/Road-Forward.png" />
+                    <RibbonButton Label="Forward"  LargeImageSource="Images/Road-Forward.png" Click="Forward_Click" />
+                    <RibbonButton Label="Stop" Click="Stop_Click" LargeImageSource="Images/Stop Media.png"  />
                     <RibbonButton Label="Left"  LargeImageSource="Images/Road-Left.png" />
                     <RibbonButton Label="Right"  LargeImageSource="Images/Road-Right.png" />
                     <RibbonButton Label="Back"  LargeImageSource="Images/Road-Backward.png" />

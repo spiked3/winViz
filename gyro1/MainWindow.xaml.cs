@@ -111,7 +111,7 @@ namespace gyro1
 
         void Mqtt_MqttMsgPublishReceived(object sender, MqttMsgPublishEventArgs e)
         {
-            Trace.WriteLine(string.Format("Mqtt_MqttMsgPublishReceived: {0}", e.Topic), "3");
+            Trace.WriteLine(string.Format("Mqtt_MqttMsgPublishReceived: {0}/{1}", e.Topic, System.Text.Encoding.UTF8.GetString(e.Message)), "3");
             switch (e.Topic)
             {
                 case "Pilot/Pose":
@@ -179,10 +179,12 @@ namespace gyro1
                 Mqtt.Disconnect();
         }
 
+        bool testToggle = true;
         private void TestP_Click(object sender, RoutedEventArgs e)
         {
-            Trace.WriteLine("TestP_Click", "1");
-            Mqtt.Publish("PC/Test", Encoding.UTF8.GetBytes("{Test123}"));
+            Trace.WriteLine("TestP_Click/ " + (testToggle ? "PC/On" : "PC/Off"), "1");
+            Mqtt.Publish(testToggle ? "PC/On" : "PC/Off", null, MqttMsgBase.QOS_LEVEL_AT_MOST_ONCE, false);
+            testToggle = !testToggle;
         }
 
         private void Exit_Click(object sender, RoutedEventArgs e)
@@ -193,6 +195,17 @@ namespace gyro1
         private void ConsoleTest_Click(object sender, RoutedEventArgs e)
         {
             console1.Test();
+        }
+
+        private void Forward_Click(object sender, RoutedEventArgs e)
+        {
+            //string j = JsonConvert.SerializeObject(50);
+            Mqtt.Publish("PC/On", null);
+        }
+
+        private void Stop_Click(object sender, RoutedEventArgs e)
+        {
+            Mqtt.Publish("PC/Off", null);
         }
     }
 

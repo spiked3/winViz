@@ -18,6 +18,16 @@ namespace gyro1
 {
     public partial class MainWindow : Window
     {
+        bool MotorDirectionForward = true;
+
+        public int Speed
+        {
+            get { return (int)GetValue(SpeedProperty); }
+            set { SetValue(SpeedProperty, value); }
+        }
+        public static readonly DependencyProperty SpeedProperty =
+            DependencyProperty.Register("Speed", typeof(int), typeof(MainWindow), new PropertyMetadata(50));
+
         public string State
         {
             get { return (string)GetValue(StateProperty); }
@@ -179,12 +189,9 @@ namespace gyro1
                 Mqtt.Disconnect();
         }
 
-        bool testToggle = true;
         private void TestP_Click(object sender, RoutedEventArgs e)
         {
-            Trace.WriteLine("TestP_Click/ " + (testToggle ? "PC/On" : "PC/Off"), "1");
-            Mqtt.Publish(testToggle ? "PC/On" : "PC/Off", null, MqttMsgBase.QOS_LEVEL_AT_MOST_ONCE, false);
-            testToggle = !testToggle;
+            Trace.WriteLine("TestP_Click/ ", "1");
         }
 
         private void Exit_Click(object sender, RoutedEventArgs e)
@@ -199,13 +206,25 @@ namespace gyro1
 
         private void Forward_Click(object sender, RoutedEventArgs e)
         {
-            //string j = JsonConvert.SerializeObject(50);
-            Mqtt.Publish("PC/On", null);
+            MotorDirectionForward = true;
+            if (Mqtt != null) Mqtt.Publish("PC/M1", string.Format("{0}", Speed).ToBytes());
         }
 
         private void Stop_Click(object sender, RoutedEventArgs e)
         {
-            Mqtt.Publish("PC/Off", null);
+            if (Mqtt != null) Mqtt.Publish("PC/M1", string.Format("{0}", 0).ToBytes());
+        }
+
+        private void Back_Click(object sender, RoutedEventArgs e)
+        {
+            MotorDirectionForward = false;
+            if (Mqtt != null) Mqtt.Publish("PC/M1", string.Format("{0}", -Speed).ToBytes());
+        }
+
+        private void SpeedChanged(object sender, RoutedPropertyChangedEventArgs<double> e)
+        {
+            if (Mqtt != null)
+                Mqtt.Publish("PC/M1", string.Format("{0}", MotorDirectionForward ? Speed : -Speed).ToBytes());
         }
     }
 

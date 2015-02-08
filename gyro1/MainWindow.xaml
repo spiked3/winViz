@@ -33,11 +33,37 @@
             <RibbonGroup Header="Move">
                 <StackPanel Orientation="Horizontal">
                     <RibbonButton Label="Forward"  LargeImageSource="Images/Road-Forward.png" Click="Forward_Click" />
-                    <RibbonButton Label="Stop" Click="Stop_Click" LargeImageSource="Images/Stop Media.png"  />
+                    <RibbonButton Label="Stop" Click="Stop_Click" LargeImageSource="Images/Stop Media.png" />
                     <RibbonButton Label="Left"  LargeImageSource="Images/Road-Left.png" />
                     <RibbonButton Label="Right"  LargeImageSource="Images/Road-Right.png" />
-                    <RibbonButton Label="Back"  LargeImageSource="Images/Road-Backward.png" />
+                    <RibbonButton Label="Back"  LargeImageSource="Images/Road-Backward.png" Click="Back_Click" />
                     <RibbonButton Label="U-Turn"  LargeImageSource="Images/U-turn.png" />
+
+                    <Grid Width="96">
+                        <Grid.ColumnDefinitions>
+                            <ColumnDefinition />
+                            <ColumnDefinition />
+                        </Grid.ColumnDefinitions>
+                        <Grid.RowDefinitions>
+                            <RowDefinition />
+                            <RowDefinition />
+                            <RowDefinition />
+                            <RowDefinition />
+                        </Grid.RowDefinitions>
+
+                        <TextBlock Text="Speed" Grid.Row="0" Grid.Column="0" />
+                        <TextBlock Text="{Binding Speed,FallbackValue=50}" Grid.Row="0" Grid.Column="1" HorizontalAlignment="Center" />
+                        <Slider Minimum="0" Maximum="100" Value="{Binding DrawScale}" SmallChange="5" LargeChange="20" 
+                                TickFrequency="10" IsSnapToTickEnabled="True" TickPlacement="TopLeft" 
+                                Grid.Row="1" Grid.ColumnSpan="2" ValueChanged="SpeedChanged" />
+
+                        <TextBlock Text="Spare" Grid.Row="2" Grid.Column="0" />
+                        <TextBlock Text="{Binding Spare,FallbackValue=50}" Grid.Row="2" Grid.Column="1" HorizontalAlignment="Center" />
+                        <Slider Minimum="0" Maximum="100" Value="{Binding DrawScale}" SmallChange="5" LargeChange="20" 
+                                TickFrequency="10" IsSnapToTickEnabled="True" TickPlacement="TopLeft" 
+                                Grid.Row="3" Grid.ColumnSpan="2" />
+
+                    </Grid>
                 </StackPanel>
             </RibbonGroup>
             <RibbonGroup Header="Options">
@@ -58,12 +84,12 @@
                         <RowDefinition />
                     </Grid.RowDefinitions>
                     <TextBlock Text="Zoom" Grid.Row="0" Grid.Column="0" />
-                    <TextBlock Text="{Binding DrawScale,FallbackValue=99.9}" Grid.Row="0" Grid.Column="1" />
+                    <TextBlock Text="{Binding DrawScale,FallbackValue=99.9}" Grid.Row="0" Grid.Column="1" HorizontalAlignment="Center" />
                     <Slider Minimum=".05" Maximum=".5" Value="{Binding DrawScale}"
                     SmallChange=".05" LargeChange=".2" TickFrequency=".05"
                     IsSnapToTickEnabled="True" TickPlacement="TopLeft" Grid.Row="1" Grid.ColumnSpan="2" />
                     <TextBlock Text="Fade" Grid.Row="2" Grid.Column="0" />
-                    <TextBlock Text="{Binding FadeFactor,FallbackValue=99.9}" Grid.Row="2" Grid.Column="1" />
+                    <TextBlock Text="{Binding FadeFactor,FallbackValue=99.9}" Grid.Row="2" Grid.Column="1" HorizontalAlignment="Center" />
                     <Slider Minimum=".50" Maximum="1" Value="{Binding FadeFactor}"
                     SmallChange=".05" LargeChange=".2" TickFrequency=".05"
                     IsSnapToTickEnabled="True" TickPlacement="TopLeft" Grid.Row="3" Grid.ColumnSpan="2" />
@@ -82,24 +108,23 @@
                 <RowDefinition Height="2*" />
             </Grid.RowDefinitions>
 
-            <local:MyCanvas x:Name="MyCanvas" >
+            <local:MyCanvas x:Name="MyCanvas">
                 <Ellipse Fill="Black" Canvas.Left="0" Canvas.Top="0" Width="10" Height="10" RenderTransform="1 0 0 1 -5 -5" />
             </local:MyCanvas>
 
-            <Grid Margin="12" HorizontalAlignment="Right" VerticalAlignment="Top" Height="172" RenderOptions.BitmapScalingMode="HighQuality" RenderOptions.EdgeMode="Aliased" >
+            <Grid Margin="12" HorizontalAlignment="Right" VerticalAlignment="Top" Height="172" RenderOptions.BitmapScalingMode="HighQuality" RenderOptions.EdgeMode="Aliased">
                 <Grid.Effect>
                     <DropShadowEffect />
                 </Grid.Effect>
                 <Image Source="Images/compass4.png" RenderTransformOrigin="0.5,0.5" RenderOptions.ClearTypeHint="Enabled" />
-                <Image Source="Images/compass_needle.png" RenderTransformOrigin="0.5,0.5" RenderOptions.ClearTypeHint="Enabled" >
+                <Image Source="Images/compass_needle.png" RenderTransformOrigin="0.5,0.5" RenderOptions.ClearTypeHint="Enabled">
                     <Image.RenderTransform>
                         <RotateTransform Angle="{Binding RobotH}" />
                     </Image.RenderTransform>
                 </Image>
             </Grid>
 
-
-            <GridSplitter Grid.Row="1" VerticalAlignment="Stretch" ResizeDirection="Rows" HorizontalAlignment="Stretch" Grid.ColumnSpan="2" BorderBrush="{DynamicResource {x:Static SystemColors.ActiveBorderBrushKey}}" BorderThickness="4"/>
+            <GridSplitter Grid.Row="1" VerticalAlignment="Stretch" ResizeDirection="Rows" HorizontalAlignment="Stretch" Grid.ColumnSpan="2" BorderBrush="{DynamicResource {x:Static SystemColors.ActiveBorderBrushKey}}" BorderThickness="4" />
 
             <Grid Grid.Row="2">
                 <Grid.ColumnDefinitions>
@@ -108,9 +133,7 @@
                 </Grid.ColumnDefinitions>
 
                 <spiked3:Console x:Name="console1" />
-
             </Grid>
         </Grid>
-        
     </DockPanel>
 </Window>

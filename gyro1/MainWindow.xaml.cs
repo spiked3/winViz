@@ -1,9 +1,10 @@
-﻿using NDesk.Options;
-using Newtonsoft.Json;
+﻿using Newtonsoft.Json;
+using spiked3;
 using System;
 using System.Collections.Generic;
+using System.ComponentModel;
+using System.Collections.ObjectModel;
 using System.Diagnostics;
-using System.Text;
 using System.Threading;
 using System.Windows;
 using System.Windows.Media;
@@ -12,19 +13,27 @@ using System.Windows.Threading;
 using uPLibrary.Networking.M2Mqtt;
 using uPLibrary.Networking.M2Mqtt.Messages;
 
-using spiked3;
-
 namespace gyro1
 {
     public partial class MainWindow : Window
     {
-        bool MotorDirectionForward = true;
+        private bool MotorDirectionForward = true;
+
+        public double Angle
+        {
+            get { return (double)GetValue(AngleProperty); }
+            set { SetValue(AngleProperty, value); }
+        }
+
+        public static readonly DependencyProperty AngleProperty =
+            DependencyProperty.Register("Angle", typeof(double), typeof(MainWindow), new PropertyMetadata(0.0));
 
         public int Speed
         {
             get { return (int)GetValue(SpeedProperty); }
             set { SetValue(SpeedProperty, value); }
         }
+
         public static readonly DependencyProperty SpeedProperty =
             DependencyProperty.Register("Speed", typeof(int), typeof(MainWindow), new PropertyMetadata(50));
 
@@ -33,6 +42,7 @@ namespace gyro1
             get { return (string)GetValue(StateProperty); }
             set { SetValue(StateProperty, value); }
         }
+
         public static readonly DependencyProperty StateProperty =
             DependencyProperty.Register("State", typeof(string), typeof(MainWindow), new PropertyMetadata("Initial State"));
 
@@ -41,15 +51,16 @@ namespace gyro1
             get { return (int)GetValue(RobotHProperty); }
             set { SetValue(RobotHProperty, value); }
         }
+
         public static readonly DependencyProperty RobotHProperty =
             DependencyProperty.Register("RobotH", typeof(int), typeof(MainWindow), new PropertyMetadata(0));
-
 
         public string StatusText
         {
             get { return (string)GetValue(StatusTextProperty); }
             set { SetValue(StatusTextProperty, value); }
         }
+
         public static readonly DependencyProperty StatusTextProperty =
             DependencyProperty.Register("StatusText", typeof(string), typeof(MainWindow), new PropertyMetadata("StatusText"));
 
@@ -58,10 +69,9 @@ namespace gyro1
             get { return (float)GetValue(DrawScaleProperty); }
             set { SetValue(DrawScaleProperty, value); }
         }
+
         public static readonly DependencyProperty DrawScaleProperty =
             DependencyProperty.Register("DrawScale", typeof(float), typeof(MainWindow), new PropertyMetadata(.1F));
-
-
 
         public double FadeFactor
         {
@@ -69,21 +79,26 @@ namespace gyro1
             set { SetValue(FadeFactorProperty, value); }
         }
 
-        // Using a DependencyProperty as the backing store for FadeFactor.  This enables animation, styling, binding, etc...
         public static readonly DependencyProperty FadeFactorProperty =
             DependencyProperty.Register("FadeFactor", typeof(double), typeof(MainWindow), new PropertyMetadata(0.7));
 
-        const string Broker = "127.0.0.1";
-        MqttClient Mqtt;
 
-        readonly TimeSpan tsFade = new TimeSpan(0, 0, 0, 0, 100);
+        public ObservableCollection<object> ViewObjects { get { return _ViewObjects; } }
+        private ObservableCollection<object> _ViewObjects = new ObservableCollection<object>();
 
-        Ellipse RobotDot;
-        List<Ellipse> FadingDots = new List<Ellipse>();
+
+        private const string Broker = "127.0.0.1";
+        private MqttClient Mqtt;
+
+        private readonly TimeSpan tsFade = new TimeSpan(0, 0, 0, 0, 100);
+
+        private Ellipse RobotDot;
+        private List<Ellipse> FadingDots = new List<Ellipse>();
 
         public MainWindow()
         {
-            InitializeComponent();
+            InitializeComponent();            
+            ViewObjects.Add(robot1);
         }
 
         private void MenuExit_Click(object sender, RoutedEventArgs e)
@@ -103,23 +118,28 @@ namespace gyro1
             State = "MQTT Connected";
             Trace.WriteLine("MQTT Connected", "1");
 
+            ViewObjects.Add(Mqtt);
+
             new DispatcherTimer(tsFade, DispatcherPriority.Background, (s, ee) =>
             {
+                Angle += 4;
+                while (Angle >= 360.0)
+                    Angle -= 360.0;
+
                 for (int i = FadingDots.Count; i > 0; i--)
                 {
                     var fadingDot = FadingDots[i - 1];
                     fadingDot.Opacity *= FadeFactor;
                     if (fadingDot.Opacity < .01)
                     {
-                        MyCanvas.Children.Remove(fadingDot);
+                        //MyCanvas.Children.Remove(fadingDot);
                         FadingDots.Remove(fadingDot);
                     }
                 }
-
             }, Dispatcher).Start();
         }
 
-        void Mqtt_MqttMsgPublishReceived(object sender, MqttMsgPublishEventArgs e)
+        private void Mqtt_MqttMsgPublishReceived(object sender, MqttMsgPublishEventArgs e)
         {
             Trace.WriteLine(string.Format("Mqtt_MqttMsgPublishReceived: {0}/{1}", e.Topic, System.Text.Encoding.UTF8.GetString(e.Message)), "3");
             switch (e.Topic)
@@ -149,16 +169,16 @@ namespace gyro1
             // fading trail
             var fadingDot = new Ellipse { Width = 8, Height = 8, Fill = Brushes.Blue, RenderTransform = new TranslateTransform { X = -4, Y = -4 } };
 
-            MyCanvas.Children.Add(fadingDot);
+            //MyCanvas.Children.Add(fadingDot);
             FadingDots.Add(fadingDot);
             MyCanvas.SetLeft(fadingDot, x);
             MyCanvas.SetTop(fadingDot, y);
 
-            if (RobotDot != null)
-                MyCanvas.Children.Remove(RobotDot);
+            //if (RobotDot != null)
+            //    MyCanvas.Children.Remove(RobotDot);
 
             RobotDot = new Ellipse { Width = 10, Height = 10, Fill = Brushes.Cyan, RenderTransform = new TranslateTransform { X = -5, Y = -5 } };
-            MyCanvas.Children.Add(RobotDot);
+            //MyCanvas.Children.Add(RobotDot);
             MyCanvas.SetLeft(RobotDot, x);
             MyCanvas.SetTop(RobotDot, y);
         }
@@ -174,10 +194,10 @@ namespace gyro1
                 for (double angle = 0; angle <= 360; angle += 10)
                 {
                     var pose = new Point(Math.Cos(angle * deg2rad) * r, -Math.Sin(angle * deg2rad) * r);
-                    MyCanvas.Dispatcher.InvokeAsync(() =>
-                    {
-                        NewRobotPose(pose.X, pose.Y, (angle - 180).inRadians());
-                    });
+                    //MyCanvas.Dispatcher.InvokeAsync(() =>
+                    //{
+                    //    NewRobotPose(pose.X, pose.Y, (angle - 180).inRadians());
+                    //});
                     System.Threading.Thread.Sleep(50);
                 }
             })).Start();
@@ -231,7 +251,9 @@ namespace gyro1
     public class RobotPose
     {
         public float X { get; set; }
+
         public float Y { get; set; }
+
         public float H { get; set; }
     }
 }

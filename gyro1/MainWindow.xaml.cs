@@ -13,6 +13,8 @@ using uPLibrary.Networking.M2Mqtt;
 using uPLibrary.Networking.M2Mqtt.Messages;
 
 using gyro1.Properties;
+using System.Windows.Media;
+using Microsoft.Win32;
 
 namespace gyro1
 {
@@ -21,6 +23,15 @@ namespace gyro1
         private Vector3D zAxis = new Vector3D(0, 0, 1);
 
         private bool MotorDirectionForward = true;
+
+        public Brush RobotBrush
+        {
+            get { return (Brush)GetValue(RobotBrushProperty); }
+            set { SetValue(RobotBrushProperty, value); }
+        }
+
+        public static readonly DependencyProperty RobotBrushProperty =
+            DependencyProperty.Register("RobotBrush", typeof(Brush), typeof(MainWindow), new PropertyMetadata(Brushes.Red));
 
         public int Speed
         {
@@ -114,6 +125,7 @@ namespace gyro1
 
             ViewObjects.Add(robot1);
             ViewObjects.Add(grid1);
+            ViewObjects.Add(RobotBrush);
         }
 
         private void MenuExit_Click(object sender, RoutedEventArgs e)
@@ -283,30 +295,42 @@ namespace gyro1
         private void Forward_Click(object sender, RoutedEventArgs e)
         {
             MotorDirectionForward = true;
-            if (Mqtt != null) Mqtt.Publish("PC/M1", string.Format("{0}", Speed).ToBytes());
+            if (Mqtt != null) Mqtt.Publish("PC/M1", string.Format("\"p\":{0}", Speed).ToBytes());
         }
 
         private void Stop_Click(object sender, RoutedEventArgs e)
         {
-            if (Mqtt != null) Mqtt.Publish("PC/M1", string.Format("{0}", 0).ToBytes());
+            if (Mqtt != null) Mqtt.Publish("PC/M1", string.Format("\"p\":{0}", 0).ToBytes());
         }
 
         private void Back_Click(object sender, RoutedEventArgs e)
         {
             MotorDirectionForward = false;
-            if (Mqtt != null) Mqtt.Publish("PC/M1", string.Format("{0}", -Speed).ToBytes());
+            if (Mqtt != null) Mqtt.Publish("PC/M1", string.Format("\"p\":{0}", -Speed).ToBytes());
         }
 
         private void SpeedChanged(object sender, RoutedPropertyChangedEventArgs<double> e)
         {
             if (Mqtt != null)
-                Mqtt.Publish("PC/M1", string.Format("{0}", MotorDirectionForward ? Speed : -Speed).ToBytes());
+                Mqtt.Publish("PC/M1", string.Format("\"p\":{0}", MotorDirectionForward ? Speed : -Speed).ToBytes());
         }
 
         private void Reset_Click(object sender, RoutedEventArgs e)
         {
             NewRobotPose(0, 0, 0, 0);
             firstStep = true;
+        }
+
+        private void Model_Click(object sender, RoutedEventArgs e)
+        {
+            OpenFileDialog d = new OpenFileDialog { Filter = "STL Files|*.stl|All Files|*.*", DefaultExt = "stl" };
+            if (d.ShowDialog() ?? false)
+            {
+                var mi = new HelixToolkit.Wpf.ModelImporter();
+                var g = mi.Load(d.FileName);
+                var m = g.Children[0];
+                //robot1 = g.Children[0];
+            }
         }
     }
 }

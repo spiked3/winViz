@@ -15,8 +15,9 @@
         </Style>
         <LinearGradientBrush x:Key="worldBg" EndPoint="0.5,1" StartPoint="0.5,0">
             <GradientStop Color="Black" Offset="0" />
-            <GradientStop Color="LightGray" Offset="1" />
+            <GradientStop Color="Darkblue" Offset="1" />
         </LinearGradientBrush>
+        <BooleanToVisibilityConverter x:Key="BooleanToVisibilityConverter" />
     </Window.Resources>
 
     <DockPanel LastChildFill="True">
@@ -28,7 +29,12 @@
                 </RibbonApplicationMenu>
             </Ribbon.ApplicationMenu>
             <RibbonGroup Header="Main">
-                <RibbonButton Label="Reset"  LargeImageSource="Images/Command-Reset.png" Click="Reset_Click" />
+                <StackPanel Orientation="Horizontal">
+                    <RibbonButton Label="Reset"  LargeImageSource="Images/Command-Reset.png" Click="Reset_Click" />
+                    <StackPanel Orientation="Vertical">
+                        <RibbonButton Label="Model ..." SmallImageSource="Plumbing/Clean.png" Click="Model_Click" />
+                    </StackPanel>
+                </StackPanel>
             </RibbonGroup>
             <RibbonGroup Header="Test">
                 <StackPanel Orientation="Horizontal">
@@ -89,11 +95,9 @@
                         <RowDefinition />
                         <RowDefinition />
                     </Grid.RowDefinitions>
-                    <TextBlock Text="Spare" Grid.Row="0" Grid.Column="0" />
-                    <TextBlock Text="{Binding Spare,FallbackValue=99.9}" Grid.Row="0" Grid.Column="1" HorizontalAlignment="Center" />
-                    <Slider Minimum=".05" Maximum=".5" Value="{Binding DrawScale}"
-                    SmallChange=".05" LargeChange=".2" TickFrequency=".05"
-                    IsSnapToTickEnabled="True" TickPlacement="TopLeft" Grid.Row="1" Grid.ColumnSpan="2" />
+
+                    <CheckBox x:Name="viewOverview" Content="Overview" Grid.ColumnSpan="2" HorizontalAlignment="Center" Margin="12" IsChecked="True" />
+
                     <TextBlock Text="Spare" Grid.Row="2" Grid.Column="0" />
                     <TextBlock Text="{Binding Spare,FallbackValue=99.9}" Grid.Row="2" Grid.Column="1" HorizontalAlignment="Center" />
                     <Slider Minimum=".50" Maximum="1" Value="{Binding FadeFactor}"
@@ -119,27 +123,37 @@
                 <TextBlock Text="Spiked3.com" Foreground="Orange" FontSize="32" Margin="64,12" />
 
                 <helix:HelixViewport3D x:Name="view1" Camera="{helix:PerspectiveCamera 20,-50,20}" ZoomExtentsWhenLoaded="False"
-                                       ModelUpDirection="0,0,1" ShowCoordinateSystem="True">
+                                       ModelUpDirection="0,0,1" ShowCoordinateSystem="True" ShowViewCube="False">
                     <helix:SunLight />
-                    <helix:CubeVisual3D  x:Name="robot1" Center="0,0,0" />
-                    <helix:CombinedManipulator TargetTransform="{Binding Transform, ElementName=robot1}" />
+                    <!--<helix:FileModelVisual3D x:Name="robot1" />-->
+                    <!--<helix:MeshGeometryVisual3D  x:Name="robot1" Material="{helix:Material Red}" />-->
+                    <helix:CubeVisual3D  x:Name="robot1" Center="0,0,0" Material="{helix:Material Red}" />
+                    <!--<helix:CombinedManipulator TargetTransform="{Binding Transform, ElementName=robot1}" />-->
                     <helix:GridLinesVisual3D Length="100" Width="100" MajorDistance="10" MinorDistance="5" x:Name="grid1" />
                 </helix:HelixViewport3D>
 
-                <StackPanel Orientation="Horizontal" Margin="0,0,0,12" VerticalAlignment="Bottom" HorizontalAlignment="Center" Background="White" >
+                <Border x:Name="overView1" HorizontalAlignment="Right" VerticalAlignment="Bottom" BorderBrush="Black" BorderThickness="4" Margin="4" Width="240" Height="180"
+                        Visibility="{Binding ElementName=viewOverview,Path=IsChecked,Converter={StaticResource BooleanToVisibilityConverter}}">
+                    <helix:HelixViewport3D x:Name="overview" Background="Gray" ShowViewCube="False">
+                        <helix:SunLight />
+                        <helix:CubeVisual3D Center="0,0,0" Transform="{Binding ElementName=robot1,Path=Transform}" Material="{Binding ElementName=robot1,Path=Material}" />
+                    </helix:HelixViewport3D>
+                </Border>
+
+                <StackPanel Orientation="Horizontal" Margin="0,0,0,12" VerticalAlignment="Bottom" HorizontalAlignment="Center" Background="White">
                     <StackPanel.Resources>
-                        <Style TargetType="TextBlock" >
+                        <Style TargetType="TextBlock">
                             <Setter Property="FontSize" Value="32" />
                             <Setter Property="Margin" Value="12,0" />
                         </Style>
                     </StackPanel.Resources>
                     <StackPanel.Effect>
-                        <DropShadowEffect/>
+                        <DropShadowEffect />
                     </StackPanel.Effect>
-                    <TextBlock Text="{Binding RobotX,FallbackValue=99.99,StringFormat=X: {0:F3}}"  />
-                    <TextBlock Text="{Binding RobotY,FallbackValue=99.99,StringFormat=Y: {0:F3}}"  />
-                    <TextBlock Text="{Binding RobotZ,FallbackValue=99.99,StringFormat=Z: {0:F3}}"  />
-                    <TextBlock Text="{Binding RobotH,FallbackValue=99.99,StringFormat=H: {0}}"  />
+                    <TextBlock Text="{Binding RobotX,FallbackValue=99.99,StringFormat=X: {0:F3}}" />
+                    <TextBlock Text="{Binding RobotY,FallbackValue=99.99,StringFormat=Y: {0:F3}}" />
+                    <TextBlock Text="{Binding RobotZ,FallbackValue=99.99,StringFormat=Z: {0:F3}}" />
+                    <TextBlock Text="{Binding RobotH,FallbackValue=99.99,StringFormat=H: {0}}" />
                 </StackPanel>
 
                 <Expander x:Name="objectView1" ExpandDirection="Right" HorizontalAlignment="Left" IsExpanded="False" Foreground="White" Width="420">
@@ -150,18 +164,18 @@
                             </TextBlock.LayoutTransform>
                         </TextBlock>
                     </Expander.Header>
-                    <Border BorderBrush="Black" BorderThickness="1" >
+                    <Border BorderBrush="Black" BorderThickness="1">
                         <Border.Effect>
-                            <DropShadowEffect/>
+                            <DropShadowEffect />
                         </Border.Effect>
                         <Grid>
-                        <Grid.RowDefinitions>
-                            <RowDefinition Height="1*" />
-                            <RowDefinition Height="2*" />
-                        </Grid.RowDefinitions>
-                        <ListBox x:Name="viewObjects1" ItemsSource="{Binding ViewObjects}" Grid.RowSpan="1" />
-                        <xtc:PropertyGrid SelectedObject="{Binding SelectedItem, ElementName=viewObjects1}" Grid.Row="1" />
-                    </Grid>
+                            <Grid.RowDefinitions>
+                                <RowDefinition Height="1*" />
+                                <RowDefinition Height="2*" />
+                            </Grid.RowDefinitions>
+                            <ListBox x:Name="viewObjects1" ItemsSource="{Binding ViewObjects}" Grid.RowSpan="1" />
+                            <xtc:PropertyGrid SelectedObject="{Binding SelectedItem, ElementName=viewObjects1}" Grid.Row="1" />
+                        </Grid>
                     </Border>
                 </Expander>
             </Grid>

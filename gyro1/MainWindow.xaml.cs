@@ -12,6 +12,8 @@ using System.Windows.Threading;
 using uPLibrary.Networking.M2Mqtt;
 using uPLibrary.Networking.M2Mqtt.Messages;
 
+using gyro1.Properties;
+
 namespace gyro1
 {
     public partial class MainWindow : Window
@@ -83,24 +85,6 @@ namespace gyro1
         public static readonly DependencyProperty StatusTextProperty =
             DependencyProperty.Register("StatusText", typeof(string), typeof(MainWindow), new PropertyMetadata("StatusText"));
 
-        public float DrawScale
-        {
-            get { return (float)GetValue(DrawScaleProperty); }
-            set { SetValue(DrawScaleProperty, value); }
-        }
-
-        public static readonly DependencyProperty DrawScaleProperty =
-            DependencyProperty.Register("DrawScale", typeof(float), typeof(MainWindow), new PropertyMetadata(.1F));
-
-        public double FadeFactor
-        {
-            get { return (double)GetValue(FadeFactorProperty); }
-            set { SetValue(FadeFactorProperty, value); }
-        }
-
-        public static readonly DependencyProperty FadeFactorProperty =
-            DependencyProperty.Register("FadeFactor", typeof(double), typeof(MainWindow), new PropertyMetadata(0.7));
-
         public ObservableCollection<object> ViewObjects { get { return _ViewObjects; } }
 
         private ObservableCollection<object> _ViewObjects = new ObservableCollection<object>();
@@ -115,6 +99,19 @@ namespace gyro1
         public MainWindow()
         {
             InitializeComponent();
+
+
+            Width = Settings.Default.Width;
+            Height = Settings.Default.Height;
+            Top = Settings.Default.Top;
+            Left = Settings.Default.Left;
+
+            if (Width == 0 || Height == 0)
+            {
+                Width = 640;
+                Height = 480;
+            }
+
             ViewObjects.Add(robot1);
             ViewObjects.Add(grid1);
         }
@@ -170,16 +167,16 @@ namespace gyro1
             switch (e.Topic)
             {
                 case "Pilot/Pose":
-                    // +++ change to dynamic
-                    RobotPose p = JsonConvert.DeserializeObject<RobotPose>(System.Text.Encoding.UTF8.GetString(e.Message));
-                    Dispatcher.InvokeAsync(() =>
+                    dynamic pose = JsonConvert.DeserializeObject(System.Text.Encoding.UTF8.GetString(e.Message));
+                    Dispatcher.Invoke(() =>
                     {
-                        NewRobotPose(p.X * DrawScale, p.Y * DrawScale, 0, p.H);
+                        NewRobotPose((double)pose.X, (double)pose.Y, (double)0, (double)pose.H);
                     });
                     break;
 
                 case "Pilot/Log":
                     string t = System.Text.Encoding.UTF8.GetString(e.Message);
+                    t = t.TrimStart('{').TrimEnd('}');
                     Trace.WriteLine(t);
                     break;
 
@@ -195,6 +192,11 @@ namespace gyro1
             RobotZ = z;
             RobotH = (int)h_radians.inDegrees();
 
+            while (RobotH >= 360)
+                RobotH -= 360;
+            while (RobotH < 0)
+                RobotH += 360;
+
             // fading trail
             //var fadingDot = new Ellipse { Width = 8, Height = 8, Fill = Brushes.Blue, RenderTransform = new TranslateTransform { X = -4, Y = -4 } };
             //MyCanvas.Children.Add(fadingDot);
@@ -202,30 +204,52 @@ namespace gyro1
             //MyCanvas.SetLeft(fadingDot, x);
             //MyCanvas.SetTop(fadingDot, y);
 
-            // x/north is up
+            // north is up, y+ is up
             var g = new Transform3DGroup();
-            g.Children.Add(new RotateTransform3D(new AxisAngleRotation3D(zAxis, RobotH)));
-            g.Children.Add(new TranslateTransform3D(y, x, z));
+            g.Children.Add(new RotateTransform3D(new AxisAngleRotation3D(zAxis, 90 - RobotH)));
+            g.Children.Add(new TranslateTransform3D(x, y, z));
             robot1.Transform = g;
+        }
+
+        private int StartAt = 0, Step = 2;
+        private double startX = -10.0, startY = 0.0;
+        private const double r = 10.0;
+        private bool firstStep = true;
+
+        private void Step_Click(object sender, RoutedEventArgs e)
+        {
+            if (firstStep)
+            {
+                firstStep = false;
+                RobotX = startX;
+                RobotY = startY;
+                RobotH = StartAt;
+                NewRobotPose(RobotX, RobotY, 0, (RobotH).inRadians());
+            }
+            else
+            {
+                RobotH += Step;
+                NewRobotPose(-Math.Cos(RobotH.inRadians()) * r, Math.Sin(RobotH.inRadians()) * r, 0, RobotH.inRadians());
+            }
         }
 
         private void TestG_Click(object sender, RoutedEventArgs e)
         {
             Trace.WriteLine("TestG_Click", "1");
-            const double r = 5.0;
+
+            int count = ((StartAt + 360) / Step) + 1;
 
             new Thread(new ThreadStart(() =>
             {
-                for (double angle = 0; angle <= 360; angle += 10)
+                firstStep = true;
+                for (int i = 0; i < count; i++)
                 {
-                    var pose = new Point(-Math.Sin((angle).inRadians()) * r, Math.Cos((angle).inRadians()) * r);
                     Dispatcher.Invoke(() =>
                     {
-                        NewRobotPose(pose.X, pose.Y, 0, (angle + 90).inRadians());
+                        Step_Click(this, null);
                     });
-                    System.Threading.Thread.Sleep(1000);
+                    System.Threading.Thread.Sleep(50);
                 }
-                Dispatcher.Invoke(() => { NewRobotPose(0, 0, 0, 0); });
             })).Start();
         }
 
@@ -233,6 +257,12 @@ namespace gyro1
         {
             if (Mqtt != null && Mqtt.IsConnected)
                 Mqtt.Disconnect();
+
+            Settings.Default.Width = (float)((Window)sender).Width;
+            Settings.Default.Height = (float)((Window)sender).Height;
+            Settings.Default.Top = (float)((Window)sender).Top;
+            Settings.Default.Left = (float)((Window)sender).Left;
+            Settings.Default.Save();
         }
 
         private void TestP_Click(object sender, RoutedEventArgs e)
@@ -276,6 +306,7 @@ namespace gyro1
         private void Reset_Click(object sender, RoutedEventArgs e)
         {
             NewRobotPose(0, 0, 0, 0);
+            firstStep = true;
         }
     }
 }

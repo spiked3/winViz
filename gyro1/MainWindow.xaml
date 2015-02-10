@@ -33,6 +33,7 @@
             <RibbonGroup Header="Test">
                 <StackPanel Orientation="Horizontal">
                     <RibbonButton Label="Graphics"  LargeImageSource="Images/Pie-Chart.png" Click="TestG_Click" />
+                    <RibbonButton Label="Step"  LargeImageSource="Images/Media-Pause.png" Click="Step_Click" />
                     <RibbonButton Label="MQTT"  LargeImageSource="Images/Chat - Next-01.png" Click="TestP_Click" />
                 </StackPanel>
             </RibbonGroup>
@@ -88,13 +89,13 @@
                         <RowDefinition />
                         <RowDefinition />
                     </Grid.RowDefinitions>
-                    <TextBlock Text="Zoom" Grid.Row="0" Grid.Column="0" />
-                    <TextBlock Text="{Binding DrawScale,FallbackValue=99.9}" Grid.Row="0" Grid.Column="1" HorizontalAlignment="Center" />
+                    <TextBlock Text="Spare" Grid.Row="0" Grid.Column="0" />
+                    <TextBlock Text="{Binding Spare,FallbackValue=99.9}" Grid.Row="0" Grid.Column="1" HorizontalAlignment="Center" />
                     <Slider Minimum=".05" Maximum=".5" Value="{Binding DrawScale}"
                     SmallChange=".05" LargeChange=".2" TickFrequency=".05"
                     IsSnapToTickEnabled="True" TickPlacement="TopLeft" Grid.Row="1" Grid.ColumnSpan="2" />
-                    <TextBlock Text="Fade" Grid.Row="2" Grid.Column="0" />
-                    <TextBlock Text="{Binding FadeFactor,FallbackValue=99.9}" Grid.Row="2" Grid.Column="1" HorizontalAlignment="Center" />
+                    <TextBlock Text="Spare" Grid.Row="2" Grid.Column="0" />
+                    <TextBlock Text="{Binding Spare,FallbackValue=99.9}" Grid.Row="2" Grid.Column="1" HorizontalAlignment="Center" />
                     <Slider Minimum=".50" Maximum="1" Value="{Binding FadeFactor}"
                     SmallChange=".05" LargeChange=".2" TickFrequency=".05"
                     IsSnapToTickEnabled="True" TickPlacement="TopLeft" Grid.Row="3" Grid.ColumnSpan="2" />
@@ -117,19 +118,15 @@
 
                 <TextBlock Text="Spiked3.com" Foreground="Orange" FontSize="32" Margin="64,12" />
 
-                <helix:HelixViewport3D x:Name="view1" Camera="{helix:PerspectiveCamera -20,-10,10}" ZoomExtentsWhenLoaded="False">
-                    <ModelVisual3D>
-                    <ModelVisual3D.Transform>
-                        <ScaleTransform3D ScaleY="-1"/> <!-- flip Y axis -->
-                    </ModelVisual3D.Transform>
-                    </ModelVisual3D>
+                <helix:HelixViewport3D x:Name="view1" Camera="{helix:PerspectiveCamera 20,-50,20}" ZoomExtentsWhenLoaded="False"
+                                       ModelUpDirection="0,0,1" ShowCoordinateSystem="True">
                     <helix:SunLight />
                     <helix:CubeVisual3D  x:Name="robot1" Center="0,0,0" />
                     <helix:CombinedManipulator TargetTransform="{Binding Transform, ElementName=robot1}" />
-                    <helix:GridLinesVisual3D Length="50" MinorDistance="5" Width="50" x:Name="grid1" />
+                    <helix:GridLinesVisual3D Length="100" Width="100" MajorDistance="10" MinorDistance="5" x:Name="grid1" />
                 </helix:HelixViewport3D>
 
-                <StackPanel Orientation="Horizontal" Margin="32,0,0,32" VerticalAlignment="Bottom" HorizontalAlignment="Left" Background="White" >
+                <StackPanel Orientation="Horizontal" Margin="0,0,0,12" VerticalAlignment="Bottom" HorizontalAlignment="Center" Background="White" >
                     <StackPanel.Resources>
                         <Style TargetType="TextBlock" >
                             <Setter Property="FontSize" Value="32" />
@@ -145,7 +142,7 @@
                     <TextBlock Text="{Binding RobotH,FallbackValue=99.99,StringFormat=H: {0}}"  />
                 </StackPanel>
 
-                <Expander x:Name="objectView1" ExpandDirection="Right" HorizontalAlignment="Left" IsExpanded="False" Foreground="White">
+                <Expander x:Name="objectView1" ExpandDirection="Right" HorizontalAlignment="Left" IsExpanded="False" Foreground="White" Width="420">
                     <Expander.Header>
                         <TextBlock Text="Objects">
                             <TextBlock.LayoutTransform>

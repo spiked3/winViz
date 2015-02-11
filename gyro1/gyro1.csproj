@@ -162,6 +162,16 @@
   <ItemGroup>
     <Resource Include="Plumbing\Clean.png" />
   </ItemGroup>
+  <ItemGroup>
+    <ProjectReference Include="..\winRobot\winRobot.csproj">
+      <Project>{b674c060-3809-4b4c-9e94-76a05c91b2cc}</Project>
+      <Name>winRobot</Name>
+    </ProjectReference>
+  </ItemGroup>
+  <ItemGroup>
+    <Resource Include="Images\Monitor-04.png" />
+    <Resource Include="Images\Robot.png" />
+  </ItemGroup>
   <Import Project="$(MSBuildToolsPath)\Microsoft.CSharp.targets" />
   <!-- To modify your build process, add your task inside one of the targets below and uncomment it. 
        Other similar extension points exist, see Microsoft.Common.targets.

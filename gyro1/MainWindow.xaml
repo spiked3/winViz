@@ -25,22 +25,22 @@
             <Ribbon.ApplicationMenu>
                 <RibbonApplicationMenu>
                     <RibbonMenuItem Header="Exit" ImageSource="Images/Power.png" Click="Exit_Click" />
-                    <RibbonMenuItem Header="Console Test" Click="ConsoleTest_Click" />
                 </RibbonApplicationMenu>
             </Ribbon.ApplicationMenu>
+            <RibbonGroup Header="Test">
+                <StackPanel Orientation="Horizontal">
+                    <RibbonButton Label="Console" Click="ConsoleTest_Click" LargeImageSource="Images/Monitor-04.png" />
+                    <RibbonButton Label="Graphics"  LargeImageSource="Images/Pie-Chart.png" Click="TestG_Click" />
+                    <RibbonButton Label="Step"  LargeImageSource="Images/Media-Pause.png" Click="Step_Click" />
+                    <RibbonButton Label="MQTT"  LargeImageSource="Images/Chat - Next-01.png" Click="TestP_Click" />
+                </StackPanel>
+            </RibbonGroup>
             <RibbonGroup Header="Main">
                 <StackPanel Orientation="Horizontal">
                     <RibbonButton Label="Reset"  LargeImageSource="Images/Command-Reset.png" Click="Reset_Click" />
                     <StackPanel Orientation="Vertical">
-                        <RibbonButton Label="Model ..." SmallImageSource="Plumbing/Clean.png" Click="Model_Click" />
+                        <RibbonButton Label="Add Robot ..." SmallImageSource="Images/Robot.png" Click="Model_Click" />
                     </StackPanel>
-                </StackPanel>
-            </RibbonGroup>
-            <RibbonGroup Header="Test">
-                <StackPanel Orientation="Horizontal">
-                    <RibbonButton Label="Graphics"  LargeImageSource="Images/Pie-Chart.png" Click="TestG_Click" />
-                    <RibbonButton Label="Step"  LargeImageSource="Images/Media-Pause.png" Click="Step_Click" />
-                    <RibbonButton Label="MQTT"  LargeImageSource="Images/Chat - Next-01.png" Click="TestP_Click" />
                 </StackPanel>
             </RibbonGroup>
             <RibbonGroup Header="Move">
@@ -66,7 +66,7 @@
 
                         <TextBlock Text="Speed" Grid.Row="0" Grid.Column="0" />
                         <TextBlock Text="{Binding Speed,FallbackValue=50}" Grid.Row="0" Grid.Column="1" HorizontalAlignment="Center" />
-                        <Slider Minimum="0" Maximum="100" Value="{Binding DrawScale}" SmallChange="5" LargeChange="20"
+                        <Slider Minimum="-100" Maximum="100" Value="{Binding Speed}" SmallChange="5" LargeChange="20"
                                 TickFrequency="10" IsSnapToTickEnabled="True" TickPlacement="TopLeft"
                                 Grid.Row="1" Grid.ColumnSpan="2" ValueChanged="SpeedChanged" />
 
@@ -120,9 +120,9 @@
 
             <Grid Background="{StaticResource worldBg}">
 
-                <TextBlock Text="Spiked3.com" Foreground="Orange" FontSize="32" Margin="64,12" />
+                <TextBlock Text="Spiked3.com" Foreground="Orange" FontSize="32" Margin="64,12,0,0" HorizontalAlignment="Left" VerticalAlignment="Top" />
 
-                <helix:HelixViewport3D x:Name="view1" Camera="{helix:PerspectiveCamera 20,-50,20}" ZoomExtentsWhenLoaded="False"
+                <helix:HelixViewport3D x:Name="view1" Camera="{helix:PerspectiveCamera 20, -50, 20}" ZoomExtentsWhenLoaded="False"
                                        ModelUpDirection="0,0,1" ShowCoordinateSystem="True" ShowViewCube="False">
                     <helix:SunLight />
                     <!--<helix:FileModelVisual3D x:Name="robot1" />-->
@@ -133,16 +133,16 @@
                 </helix:HelixViewport3D>
 
                 <Border x:Name="overView1" HorizontalAlignment="Right" VerticalAlignment="Bottom" BorderBrush="Black" BorderThickness="4" Margin="4" Width="240" Height="180"
-                        Visibility="{Binding ElementName=viewOverview,Path=IsChecked,Converter={StaticResource BooleanToVisibilityConverter}}">
+                        Visibility="{Binding IsChecked, Converter={StaticResource BooleanToVisibilityConverter}, ElementName=viewOverview}">
                     <helix:HelixViewport3D x:Name="overview" Background="Gray" ShowViewCube="False">
                         <helix:SunLight />
-                        <helix:CubeVisual3D Center="0,0,0" Transform="{Binding ElementName=robot1,Path=Transform}" Material="{Binding ElementName=robot1,Path=Material}" />
+                        <helix:CubeVisual3D Center="0,0,0" Transform="{Binding Transform, ElementName=robot1}" Material="{Binding Material, ElementName=robot1}" />
                     </helix:HelixViewport3D>
                 </Border>
 
                 <StackPanel Orientation="Horizontal" Margin="0,0,0,12" VerticalAlignment="Bottom" HorizontalAlignment="Center" Background="White">
                     <StackPanel.Resources>
-                        <Style TargetType="TextBlock">
+                        <Style TargetType="{x:Type TextBlock}">
                             <Setter Property="FontSize" Value="32" />
                             <Setter Property="Margin" Value="12,0" />
                         </Style>
@@ -150,13 +150,14 @@
                     <StackPanel.Effect>
                         <DropShadowEffect />
                     </StackPanel.Effect>
-                    <TextBlock Text="{Binding RobotX,FallbackValue=99.99,StringFormat=X: {0:F3}}" />
-                    <TextBlock Text="{Binding RobotY,FallbackValue=99.99,StringFormat=Y: {0:F3}}" />
-                    <TextBlock Text="{Binding RobotZ,FallbackValue=99.99,StringFormat=Z: {0:F3}}" />
-                    <TextBlock Text="{Binding RobotH,FallbackValue=99.99,StringFormat=H: {0}}" />
+                    <TextBlock Text="{Binding RobotX, FallbackValue=99.99, StringFormat=X: \{0:F3\}}" />
+                    <TextBlock Text="{Binding RobotY, FallbackValue=99.99, StringFormat=Y: \{0:F3\}}" />
+                    <TextBlock Text="{Binding RobotZ, FallbackValue=99.99, StringFormat=Z: \{0:F3\}}" />
+                    <TextBlock Text="{Binding RobotH, FallbackValue=99.99, StringFormat=H: \{0\}}" />
                 </StackPanel>
-
-                <Expander x:Name="objectView1" ExpandDirection="Right" HorizontalAlignment="Left" IsExpanded="False" Foreground="White" Width="420">
+                
+                <!-- exapander has issues! -->
+                <Expander x:Name="objectView1" ExpandDirection="Right" HorizontalAlignment="Left" IsExpanded="False" Foreground="White" Width="340" Height="Auto">
                     <Expander.Header>
                         <TextBlock Text="Objects">
                             <TextBlock.LayoutTransform>
@@ -164,7 +165,7 @@
                             </TextBlock.LayoutTransform>
                         </TextBlock>
                     </Expander.Header>
-                    <Border BorderBrush="Black" BorderThickness="1">
+                    <Border BorderBrush="Black" BorderThickness="1" >
                         <Border.Effect>
                             <DropShadowEffect />
                         </Border.Effect>

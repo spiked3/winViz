@@ -1,6 +1,4 @@
-﻿using Newtonsoft.Json;
-using spiked3;
-using System;
+﻿using System;
 using System.Collections.Generic;
 using System.Collections.ObjectModel;
 using System.Diagnostics;
@@ -9,12 +7,36 @@ using System.Windows;
 using System.Windows.Media.Media3D;
 using System.Windows.Shapes;
 using System.Windows.Threading;
+using System.Windows.Media;
+using Microsoft.Win32;
+
+using Newtonsoft.Json;
+
 using uPLibrary.Networking.M2Mqtt;
 using uPLibrary.Networking.M2Mqtt.Messages;
 
 using gyro1.Properties;
-using System.Windows.Media;
-using Microsoft.Win32;
+using spiked3;
+using spiked3.winRobot;
+using HelixToolkit.Wpf;
+
+// done move console test to test group
+// todo WPF bug; expander blocks focus even when not expanded
+// FrameLib - eg TF like functions
+// restyle ribbon button system menu to be a glassy S3 button, like dex and 3DS does w/infragistics
+// robot object 
+// robot ribbon menu group should a tab created as a result of adding the robot
+// robot simulator - test bed / functions / 
+
+// start defining the infratrucure (ie std_msgs/variables/services(as Libraries))
+//     frameLib for transform services. create a frame object, set base, point& frame.tranform(point) 
+//     winViz  load robots. accept sensor values (dynamic?). accept pose.  DRFU?
+
+// start thinking navplanner merge
+
+// ?functionality to get presentable demo / set prorities, best roadmap
+//  need to get model loaded
+//  
 
 namespace gyro1
 {
@@ -31,7 +53,7 @@ namespace gyro1
         }
 
         public static readonly DependencyProperty RobotBrushProperty =
-            DependencyProperty.Register("RobotBrush", typeof(Brush), typeof(MainWindow), new PropertyMetadata(Brushes.Red));
+            DependencyProperty.Register("RobotBrush", typeof(Brush), typeof(MainWindow), new PropertyMetadata(Brushes.Gray));
 
         public int Speed
         {
@@ -110,7 +132,6 @@ namespace gyro1
         public MainWindow()
         {
             InitializeComponent();
-
 
             Width = Settings.Default.Width;
             Height = Settings.Default.Height;
@@ -209,13 +230,6 @@ namespace gyro1
             while (RobotH < 0)
                 RobotH += 360;
 
-            // fading trail
-            //var fadingDot = new Ellipse { Width = 8, Height = 8, Fill = Brushes.Blue, RenderTransform = new TranslateTransform { X = -4, Y = -4 } };
-            //MyCanvas.Children.Add(fadingDot);
-            //FadingDots.Add(fadingDot);
-            //MyCanvas.SetLeft(fadingDot, x);
-            //MyCanvas.SetTop(fadingDot, y);
-
             // north is up, y+ is up
             var g = new Transform3DGroup();
             g.Children.Add(new RotateTransform3D(new AxisAngleRotation3D(zAxis, 90 - RobotH)));
@@ -279,7 +293,7 @@ namespace gyro1
 
         private void TestP_Click(object sender, RoutedEventArgs e)
         {
-            Trace.WriteLine("TestP_Click/ ", "1");
+            Trace.WriteLine("TestP_Click (empty)", "1");
         }
 
         private void Exit_Click(object sender, RoutedEventArgs e)
@@ -326,10 +340,25 @@ namespace gyro1
             OpenFileDialog d = new OpenFileDialog { Filter = "STL Files|*.stl|All Files|*.*", DefaultExt = "stl" };
             if (d.ShowDialog() ?? false)
             {
+                MeshBuilder mb = new MeshBuilder(false, false);
+
                 var mi = new HelixToolkit.Wpf.ModelImporter();
                 var g = mi.Load(d.FileName);
-                var m = g.Children[0];
-                //robot1 = g.Children[0];
+                foreach (var m in g.Children)
+                {
+                    var mGeo = m as GeometryModel3D;
+                    var mesh = mGeo.Geometry as MeshGeometry3D;
+                    if (mesh != null)
+                        mb.Append(mesh);
+                }
+
+                robot1.Model.Geometry = mb.ToMesh();
+
+                var xg = new Transform3DGroup();
+                xg.Children.Add(new ScaleTransform3D(.01, .01, .01));
+                xg.Children.Add(new RotateTransform3D(new AxisAngleRotation3D(zAxis, -90)));
+                robot1.Model.Transform = xg;
+                robot1.Model.Geometry = robot1.Model.Geometry.Clone();  // permanently apply transform
             }
         }
     }

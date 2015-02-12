@@ -6,7 +6,7 @@ using System.Windows.Media;
 using System.Windows.Shapes;
 using System.Windows.Threading;
 
-namespace gyro1
+namespace spiked3.winViz
 {
     public class MyCanvas : Canvas
     {

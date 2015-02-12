@@ -9,23 +9,25 @@ using System.Windows.Shapes;
 using System.Windows.Threading;
 using System.Windows.Media;
 using Microsoft.Win32;
+using System.Windows.Controls.Ribbon;
 
 using Newtonsoft.Json;
 
 using uPLibrary.Networking.M2Mqtt;
 using uPLibrary.Networking.M2Mqtt.Messages;
 
-using gyro1.Properties;
 using spiked3;
+using spiked3.winViz.Properties;
 using spiked3.winRobot;
+
 using HelixToolkit.Wpf;
 
 // done move console test to test group
 // todo WPF bug; expander blocks focus even when not expanded
 // FrameLib - eg TF like functions
 // restyle ribbon button system menu to be a glassy S3 button, like dex and 3DS does w/infragistics
-// robot object 
-// robot ribbon menu group should a tab created as a result of adding the robot
+// robot object as object
+//  robot ribbon menu group should a tab created as a result of adding the robot
 // robot simulator - test bed / functions / 
 
 // start defining the infratrucure (ie std_msgs/variables/services(as Libraries))
@@ -38,9 +40,9 @@ using HelixToolkit.Wpf;
 //  need to get model loaded
 //  
 
-namespace gyro1
+namespace spiked3.winViz
 {
-    public partial class MainWindow : Window
+    public partial class MainWindow : RibbonWindow
     {
         private Vector3D zAxis = new Vector3D(0, 0, 1);
 
@@ -157,7 +159,7 @@ namespace gyro1
         private void Window_Loaded(object sender, RoutedEventArgs e)
         {
             spiked3.Console.MessageLevel = 1;
-            Trace.WriteLine("S3 Gyro1 Encoder/Gyro Fusion 0.9 © 2015 spiked3.com", "+");
+            Trace.WriteLine("winViz / Gyro Fusion 0.2 © 2015 spiked3.com", "+");
             State = "MQTT Connecting ...";
             Mqtt = new MqttClient(Broker);
             Mqtt.MqttMsgPublishReceived += Mqtt_MqttMsgPublishReceived;
@@ -197,6 +199,11 @@ namespace gyro1
         private void Mqtt_MqttMsgPublishReceived(object sender, MqttMsgPublishEventArgs e)
         {
             Trace.WriteLine(string.Format("Mqtt_MqttMsgPublishReceived: {0}/{1}", e.Topic, System.Text.Encoding.UTF8.GetString(e.Message)), "3");
+            if (e.DupFlag)
+            {
+                return; // drop duplicates
+            }
+
             switch (e.Topic)
             {
                 case "Pilot/Pose":
@@ -204,7 +211,7 @@ namespace gyro1
                     Dispatcher.Invoke(() =>
                     {
                         NewRobotPose((double)pose.X, (double)pose.Y, (double)0, (double)pose.H);
-                    });
+                    }, DispatcherPriority.Render);
                     break;
 
                 case "Pilot/Log":
@@ -356,6 +363,7 @@ namespace gyro1
 
                 var xg = new Transform3DGroup();
                 xg.Children.Add(new ScaleTransform3D(.01, .01, .01));
+                xg.Children.Add(new TranslateTransform3D(0, 0, .5));
                 xg.Children.Add(new RotateTransform3D(new AxisAngleRotation3D(zAxis, -90)));
                 robot1.Model.Transform = xg;
                 robot1.Model.Geometry = robot1.Model.Geometry.Clone();  // permanently apply transform

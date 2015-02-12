@@ -1,4 +1,4 @@
-﻿<Application x:Class="gyro1.App"
+﻿<Application x:Class="spiked3.winViz.App"
              xmlns="http://schemas.microsoft.com/winfx/2006/xaml/presentation"
              xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
              StartupUri="MainWindow.xaml">

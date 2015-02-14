@@ -24,7 +24,7 @@ using HelixToolkit.Wpf;
 
 // done move console test to test group
 // todo WPF bug; expander blocks focus even when not expanded
-// FrameLib - eg TF like functions
+// Frame - eg TF like functions
 // restyle ribbon button system menu to be a glassy S3 button, like dex and 3DS does w/infragistics
 // robot object as object
 //  robot ribbon menu group should a tab created as a result of adding the robot
@@ -208,7 +208,7 @@ namespace spiked3.winViz
             {
                 case "Pilot/Pose":
                     dynamic pose = JsonConvert.DeserializeObject(System.Text.Encoding.UTF8.GetString(e.Message));
-                    Dispatcher.Invoke(() =>
+                    Dispatcher.InvokeAsync(() =>
                     {
                         NewRobotPose((double)pose.X, (double)pose.Y, (double)0, (double)pose.H);
                     }, DispatcherPriority.Render);
@@ -244,7 +244,7 @@ namespace spiked3.winViz
             robot1.Transform = g;
         }
 
-        private int StartAt = 0, Step = 2;
+        private int StartAt = 0, Step = 4;
         private double startX = -10.0, startY = 0.0;
         private const double r = 10.0;
         private bool firstStep = true;
@@ -277,11 +277,11 @@ namespace spiked3.winViz
                 firstStep = true;
                 for (int i = 0; i < count; i++)
                 {
-                    Dispatcher.Invoke(() =>
+                    Dispatcher.InvokeAsync(() =>
                     {
                         Step_Click(this, null);
                     });
-                    System.Threading.Thread.Sleep(50);
+                    System.Threading.Thread.Sleep(1000 / 30);
                 }
             })).Start();
         }

@@ -120,16 +120,10 @@ namespace spiked3.winViz
         public static readonly DependencyProperty StatusTextProperty =
             DependencyProperty.Register("StatusText", typeof(string), typeof(MainWindow), new PropertyMetadata("StatusText"));
 
-        public ObservableCollection<object> ViewObjects { get { return _ViewObjects; } }
-
-        private ObservableCollection<object> _ViewObjects = new ObservableCollection<object>();
-
         private const string Broker = "127.0.0.1";
         private MqttClient Mqtt;
 
-        private readonly TimeSpan tsFade = new TimeSpan(0, 0, 0, 0, 100);
-
-        private List<Ellipse> FadingDots = new List<Ellipse>();
+        Dictionary<string, Visual3D> RobotDictionary = new Dictionary<string, Visual3D>();
 
         public MainWindow()
         {
@@ -145,10 +139,6 @@ namespace spiked3.winViz
                 Width = 640;
                 Height = 480;
             }
-
-            ViewObjects.Add(robot1);
-            ViewObjects.Add(grid1);
-            ViewObjects.Add(RobotBrush);
         }
 
         private void MenuExit_Click(object sender, RoutedEventArgs e)
@@ -168,23 +158,7 @@ namespace spiked3.winViz
             State = "MQTT Connected";
             Trace.WriteLine("MQTT Connected", "1");
 
-            ViewObjects.Add(Mqtt);
-
-            //new DispatcherTimer(tsFade, DispatcherPriority.Normal, (s, ee) =>
-            //{
-            //    for (int i = FadingDots.Count; i > 0; i--)
-            //    {
-            //        var fadingDot = FadingDots[i - 1];
-            //        fadingDot.Opacity *= FadeFactor;
-            //        if (fadingDot.Opacity < .01)
-            //        {
-            //            //MyCanvas.Children.Remove(fadingDot);
-            //            FadingDots.Remove(fadingDot);
-            //        }
-            //    }
-            //}, Dispatcher).Start();
-
-            NewRobotPose(0, 0, 0, 0);
+            viewObjects1.Add(Mqtt);
         }
 
         private class RobotPose
@@ -210,7 +184,7 @@ namespace spiked3.winViz
                     dynamic pose = JsonConvert.DeserializeObject(System.Text.Encoding.UTF8.GetString(e.Message));
                     Dispatcher.InvokeAsync(() =>
                     {
-                        NewRobotPose((double)pose.X, (double)pose.Y, (double)0, (double)pose.H);
+                        NewRobotPose("Pilot", (double)pose.X, (double)pose.Y, (double)0, (double)pose.H);
                     }, DispatcherPriority.Render);
                     break;
 
@@ -225,23 +199,28 @@ namespace spiked3.winViz
             }
         }
 
-        private void NewRobotPose(double x, double y, double z, double h_radians)
+        // +++ pose display should be via a billboard near robot
+        private void NewRobotPose(string robot, double x, double y, double z, double h_radians)
         {
-            RobotX = x;
-            RobotY = y;
-            RobotZ = z;
-            RobotH = (int)h_radians.inDegrees();
+            if (RobotDictionary.ContainsKey(robot))
+            {
+                RobotX = x;
+                RobotY = y;
+                RobotZ = z;
+                RobotH = (int)h_radians.inDegrees();
 
-            while (RobotH >= 360)
-                RobotH -= 360;
-            while (RobotH < 0)
-                RobotH += 360;
+                while (RobotH >= 360)
+                    RobotH -= 360;
+                while (RobotH < 0)
+                    RobotH += 360;
 
-            // north is up, y+ is up
-            var g = new Transform3DGroup();
-            g.Children.Add(new RotateTransform3D(new AxisAngleRotation3D(zAxis, 90 - RobotH)));
-            g.Children.Add(new TranslateTransform3D(x, y, z));
-            robot1.Transform = g;
+                // north is up, y+ is up
+                var g = new Transform3DGroup();
+                g.Children.Add(new RotateTransform3D(new AxisAngleRotation3D(zAxis, 90 - RobotH)));
+                g.Children.Add(new TranslateTransform3D(x, y, z));
+
+                RobotDictionary[robot].Transform = g;
+            }
         }
 
         private int StartAt = 0, Step = 4;
@@ -257,12 +236,12 @@ namespace spiked3.winViz
                 RobotX = startX;
                 RobotY = startY;
                 RobotH = StartAt;
-                NewRobotPose(RobotX, RobotY, 0, (RobotH).inRadians());
+                NewRobotPose("Pilot", RobotX, RobotY, 0, (RobotH).inRadians());
             }
             else
             {
                 RobotH += Step;
-                NewRobotPose(-Math.Cos(RobotH.inRadians()) * r, Math.Sin(RobotH.inRadians()) * r, 0, RobotH.inRadians());
+                NewRobotPose("Pilot", -Math.Cos(RobotH.inRadians()) * r, Math.Sin(RobotH.inRadians()) * r, 0, RobotH.inRadians());
             }
         }
 
@@ -338,7 +317,7 @@ namespace spiked3.winViz
 
         private void Reset_Click(object sender, RoutedEventArgs e)
         {
-            NewRobotPose(0, 0, 0, 0);
+            NewRobotPose("Pilot", 0, 0, 0, 0);
             firstStep = true;
         }
 
@@ -347,6 +326,8 @@ namespace spiked3.winViz
             OpenFileDialog d = new OpenFileDialog { Filter = "STL Files|*.stl|All Files|*.*", DefaultExt = "stl" };
             if (d.ShowDialog() ?? false)
             {
+                MeshGeometryVisual3D robot = new MeshGeometryVisual3D();
+
                 MeshBuilder mb = new MeshBuilder(false, false);
 
                 var mi = new HelixToolkit.Wpf.ModelImporter();
@@ -359,14 +340,23 @@ namespace spiked3.winViz
                         mb.Append(mesh);
                 }
 
-                robot1.Model.Geometry = mb.ToMesh();
+                robot.MeshGeometry = mb.ToMesh();
+                robot.Material = Materials.Gray;
 
                 var xg = new Transform3DGroup();
+                // +++these would be values from import dialog
                 xg.Children.Add(new ScaleTransform3D(.01, .01, .01));
                 xg.Children.Add(new TranslateTransform3D(0, 0, .5));
                 xg.Children.Add(new RotateTransform3D(new AxisAngleRotation3D(zAxis, -90)));
-                robot1.Model.Transform = xg;
-                robot1.Model.Geometry = robot1.Model.Geometry.Clone();  // permanently apply transform
+                robot.Model.Transform = xg;
+                robot.Model.Geometry = robot.Model.Geometry.Clone();  // permanently apply transform
+
+                RobotDictionary.Add("Pilot", robot);
+                view1.Children.Add(robot);
+                viewObjects1.Add(robot);
+
+                NewRobotPose("Pilot", 0, 0, 0, 0);
+                firstStep = true;
             }
         }
     }

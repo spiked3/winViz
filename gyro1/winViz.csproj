@@ -88,10 +88,17 @@
       <Generator>MSBuild:Compile</Generator>
       <SubType>Designer</SubType>
     </ApplicationDefinition>
+    <Compile Include="ObjectsPanel.xaml.cs">
+      <DependentUpon>ObjectsPanel.xaml</DependentUpon>
+    </Compile>
     <Compile Include="Plumbing\Console.xaml.cs">
       <DependentUpon>Console.xaml</DependentUpon>
     </Compile>
     <Compile Include="MyCanvas.cs" />
+    <Page Include="ObjectsPanel.xaml">
+      <SubType>Designer</SubType>
+      <Generator>MSBuild:Compile</Generator>
+    </Page>
     <Page Include="Plumbing\Console.xaml">
       <SubType>Designer</SubType>
       <Generator>MSBuild:Compile</Generator>

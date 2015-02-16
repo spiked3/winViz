@@ -1,0 +1,29 @@
+﻿<UserControl x:Class="spiked3.winViz.ObjectsPanel"
+             xmlns="http://schemas.microsoft.com/winfx/2006/xaml/presentation"
+             xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+             xmlns:mc="http://schemas.openxmlformats.org/markup-compatibility/2006"
+             xmlns:xtc="http://schemas.xceed.com/wpf/xaml/toolkit"
+             xmlns:d="http://schemas.microsoft.com/expression/blend/2008"
+             mc:Ignorable="d"
+             DataContext="{Binding RelativeSource={RelativeSource Self}}"
+             d:DesignHeight="300" d:DesignWidth="300">
+    <Grid>
+        <Expander x:Name="objectView1" ExpandDirection="Right" Background="White">
+            <Expander.Header>
+                <TextBlock Text="Objects">
+                    <TextBlock.LayoutTransform>
+                        <RotateTransform Angle="-90" />
+                    </TextBlock.LayoutTransform>
+                </TextBlock>
+            </Expander.Header>
+            <Grid >
+                <Grid.RowDefinitions>
+                    <RowDefinition Height="1*" />
+                    <RowDefinition Height="2*" />
+                </Grid.RowDefinitions>
+                <ListBox x:Name="viewObjects1" ItemsSource="{Binding ViewObjects}" Grid.RowSpan="1" />
+                <xtc:PropertyGrid SelectedObject="{Binding SelectedItem, ElementName=viewObjects1}" Grid.Row="1" />
+            </Grid>
+        </Expander>
+    </Grid>
+</UserControl>

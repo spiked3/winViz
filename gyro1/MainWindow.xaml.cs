@@ -359,5 +359,14 @@ namespace spiked3.winViz
                 firstStep = true;
             }
         }
+
+        private void MqttSn_Click(object sender, RoutedEventArgs e)
+        {
+            // +++ never really done - should be in bridge
+            new Thread(() =>
+            {
+                //
+            }).Start();
+        }
     }
 }

@@ -38,6 +38,7 @@
                         <RibbonButton Label="Graphics"  LargeImageSource="Images/Pie-Chart.png" Click="TestG_Click" />
                         <RibbonButton Label="Step"  LargeImageSource="Images/Media-Pause.png" Click="Step_Click" />
                         <RibbonButton Label="MQTT"  LargeImageSource="Images/Chat - Next-01.png" Click="TestP_Click" />
+                        <RibbonButton Label="MQTT-SN" LargeImageSource="Images/Chat - Next-03.png" Click="MqttSn_Click" />
                     </StackPanel>
                 </RibbonGroup>
                 <RibbonGroup Header="Main">

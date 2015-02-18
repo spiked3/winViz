@@ -70,5 +70,17 @@ namespace spiked3.winViz.Properties {
                 this["Left"] = value;
             }
         }
+        
+        [global::System.Configuration.UserScopedSettingAttribute()]
+        [global::System.Diagnostics.DebuggerNonUserCodeAttribute()]
+        [global::System.Configuration.DefaultSettingValueAttribute("")]
+        public string LastRobot {
+            get {
+                return ((string)(this["LastRobot"]));
+            }
+            set {
+                this["LastRobot"] = value;
+            }
+        }
     }
 }

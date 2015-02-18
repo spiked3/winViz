@@ -44,6 +44,8 @@ namespace spiked3.winViz
 {
     public partial class MainWindow : RibbonWindow
     {
+        private Vector3D xAxis = new Vector3D(1, 0, 0);
+        private Vector3D yAxis = new Vector3D(0, 1, 0);
         private Vector3D zAxis = new Vector3D(0, 0, 1);
 
         private bool MotorDirectionForward = true;
@@ -123,6 +125,8 @@ namespace spiked3.winViz
         private const string Broker = "127.0.0.1";
         private MqttClient Mqtt;
 
+        string LastRobot;
+
         Dictionary<string, Visual3D> RobotDictionary = new Dictionary<string, Visual3D>();
 
         public MainWindow()
@@ -139,6 +143,9 @@ namespace spiked3.winViz
                 Width = 640;
                 Height = 480;
             }
+
+            if (Settings.Default.LastRobot != null && System.IO.File.Exists(Settings.Default.LastRobot))
+                LoadRobot(Settings.Default.LastRobot);
         }
 
         private void MenuExit_Click(object sender, RoutedEventArgs e)
@@ -274,6 +281,7 @@ namespace spiked3.winViz
             Settings.Default.Height = (float)((Window)sender).Height;
             Settings.Default.Top = (float)((Window)sender).Top;
             Settings.Default.Left = (float)((Window)sender).Left;
+            Settings.Default.LastRobot = LastRobot;
             Settings.Default.Save();
         }
 
@@ -321,42 +329,52 @@ namespace spiked3.winViz
             firstStep = true;
         }
 
+        void LoadRobot(string filename)
+        {
+            foreach (var r in RobotDictionary.Values)
+                view1.Children.Remove(r);
+            RobotDictionary.Clear();        // we are only supporting one at the moment
+            MeshGeometryVisual3D robot = new MeshGeometryVisual3D();
+
+            MeshBuilder mb = new MeshBuilder(false, false);
+
+            var mi = new HelixToolkit.Wpf.ModelImporter();
+            var g = mi.Load(filename);
+            foreach (var m in g.Children)
+            {
+                var mGeo = m as GeometryModel3D;
+                var mesh = mGeo.Geometry as MeshGeometry3D;
+                if (mesh != null)
+                    mb.Append(mesh);
+            }
+
+            robot.MeshGeometry = mb.ToMesh();
+            robot.Material = Materials.Gray;
+
+            var xg = new Transform3DGroup();
+            // +++these would be values from import dialog
+            xg.Children.Add(new ScaleTransform3D(.01, .01, .01));
+            xg.Children.Add(new TranslateTransform3D(0, 0, .5));
+            xg.Children.Add(new RotateTransform3D(new AxisAngleRotation3D(zAxis, -90)));
+            //xg.Children.Add(new RotateTransform3D(new AxisAngleRotation3D(xAxis, 180)));
+            robot.Model.Transform = xg;
+            robot.Model.Geometry = robot.Model.Geometry.Clone();  // permanently apply transform
+
+            RobotDictionary.Add("Pilot", robot);
+            view1.Children.Add(robot);
+            viewObjects1.Add(robot);
+
+            NewRobotPose("Pilot", 0, 0, 0, 0);
+            firstStep = true;
+            LastRobot = filename;
+        }
+
         private void Model_Click(object sender, RoutedEventArgs e)
         {
             OpenFileDialog d = new OpenFileDialog { Filter = "STL Files|*.stl|All Files|*.*", DefaultExt = "stl" };
             if (d.ShowDialog() ?? false)
             {
-                MeshGeometryVisual3D robot = new MeshGeometryVisual3D();
-
-                MeshBuilder mb = new MeshBuilder(false, false);
-
-                var mi = new HelixToolkit.Wpf.ModelImporter();
-                var g = mi.Load(d.FileName);
-                foreach (var m in g.Children)
-                {
-                    var mGeo = m as GeometryModel3D;
-                    var mesh = mGeo.Geometry as MeshGeometry3D;
-                    if (mesh != null)
-                        mb.Append(mesh);
-                }
-
-                robot.MeshGeometry = mb.ToMesh();
-                robot.Material = Materials.Gray;
-
-                var xg = new Transform3DGroup();
-                // +++these would be values from import dialog
-                xg.Children.Add(new ScaleTransform3D(.01, .01, .01));
-                xg.Children.Add(new TranslateTransform3D(0, 0, .5));
-                xg.Children.Add(new RotateTransform3D(new AxisAngleRotation3D(zAxis, -90)));
-                robot.Model.Transform = xg;
-                robot.Model.Geometry = robot.Model.Geometry.Clone();  // permanently apply transform
-
-                RobotDictionary.Add("Pilot", robot);
-                view1.Children.Add(robot);
-                viewObjects1.Add(robot);
-
-                NewRobotPose("Pilot", 0, 0, 0, 0);
-                firstStep = true;
+                LoadRobot(d.FileName);
             }
         }
 

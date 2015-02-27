@@ -23,5 +23,11 @@ namespace spiked3.winViz
         {
             InitializeComponent();
         }
+
+        private void Button_Click(object sender, RoutedEventArgs e)
+        {
+            Microsoft.Win32.FileDialog d = new Microsoft.Win32.OpenFileDialog();
+            d.ShowDialog();
+        }
     }
 }

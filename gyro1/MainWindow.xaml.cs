@@ -386,5 +386,10 @@ namespace spiked3.winViz
                 //
             }).Start();
         }
+
+        private void RibbonButton_Click(object sender, RoutedEventArgs e)
+        {
+            new ImportDlg().ShowDialog();
+        }
     }
 }

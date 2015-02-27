@@ -26,7 +26,7 @@ C M2 driveLeft
 #define WDS writeDebugStream
 
 #define MoveCompleteThreshold 50.0
-#define PoseUpdateRate 50
+#define PoseUpdateRate 20
 #define MoveUpdateRate 50
 
 #define BasePower 30.0
@@ -53,7 +53,7 @@ float RobotH = 0;
 
 int hsInBuffIdx = 0;
 ubyte hsInBuff[128];
-char json[64];	// (not thread safe!)
+char json[128];	// (not thread safe!)
 
 //---  Util  -------------------------
 
@@ -91,7 +91,7 @@ float meanGyroZValue(int interval, int N)
 
 float ToDegrees(float a)
 {
-	return a * 180 / PI;
+	return a * 180.0 / PI;
 }
 
 float ToRadians(float a)
@@ -196,7 +196,7 @@ void CalcPoseWithGyro()
 	LastRightTacho = CurrentRightTacho;
 	LastPoseTime = nowTime;
 
-	sprintf(json, "PUBnxt/Pose,{\"x\":%f,\"y\":%f,\"h\":%f}\n",
+	sprintf(json, "PUBnxt/Pose{\"x\":%f,\"y\":%f,\"h\":%f}\n",
 	RobotX, RobotY, RobotH);
 	//WDS(json);
 	nxtWriteRawHS(json, strlen(json), 0);
@@ -218,7 +218,7 @@ void CalcPose()
 		return; // insignificant movement, avoid updating
 
 	float delta = (leftTachoChange + rightTachoChange) * ticksToMM / 2.0;
-	tachoMeasured = (leftTachoChange - rightTachoChange) *
+		tachoMeasured = (leftTachoChange - rightTachoChange) *
 	ticksToMM / WheelBase;
 
 	RobotX += delta * sin(RobotH + (tachoMeasured / 2.0));
@@ -229,10 +229,10 @@ void CalcPose()
 	LastRightTacho = CurrentRightTacho;
 	LastPoseTime = nowTime;
 
-	sprintf(json, "PUBnxt/Pose,{\"x\":%f,\"y\":%f,\"h\":%f}\n",
+	sprintf(json, "PUBPilot/Pose{\"x\":%f,\"y\":%f,\"h\":%f}\r\n",
 	RobotX, RobotY, RobotH);
-	//WDS(txt);
-	nxtWriteRawHS(json, strlen(json), 0);
+	WDS(json);
+	//nxtWriteRawHS(json, strlen(json), 0);
 }
 
 task UpdatePose()
@@ -252,12 +252,16 @@ float pidIntegral, derivative;	// global so we can debug
 
 float GetPidTurnPower(float sp, float dt)
 {
-	float error = sp - RobotH;
-	pidIntegral = pidIntegral + error * dt;
-	derivative = (error - pidPreviousError) / dt;
-	float p = K_P * error + K_I * pidIntegral + K_D * derivative;
-	p = p > 100 ? 100 : p < -100 ? -100 : p;
-	pidPreviousError = error;
+	float p = 0;
+	if (dt > 0)
+	{
+		float error = sp - RobotH;
+		pidIntegral = pidIntegral + error * dt;
+		derivative = (error - pidPreviousError) / dt;
+		p = K_P * error + K_I * pidIntegral + K_D * derivative;
+		p = p > 100 ? 100 : p < -100 ? -100 : p;
+		pidPreviousError = error;
+	}
 	return p;
 }
 
@@ -405,13 +409,12 @@ task main()
 	varianceFilterUpdated = 0;
 
 	time1[T1] = 0;			// resest the clock
-	startTask(CheckMQTT);
+	//startTask(CheckMQTT);
 	startTask(UpdatePose);
 
 	// make a move
-	//Move(1000.0);		// in mm
-	Move(1000, 0);			// x,y
-	Move(0, 0);			// x,y
+	Move(100, 0);			// x,y
+	//Move(0, 0);			// x,y
 	//Rotate(ToRadians(180));
 
 	//testing

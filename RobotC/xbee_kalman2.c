@@ -23,19 +23,13 @@ C M2 driveLeft
 
 */
 
-#define WDS writeDebugStream
+#include "misc.h"
 
 #define MoveCompleteThreshold 50.0
 #define PoseUpdateRate 20
 #define MoveUpdateRate 50
 
 #define BasePower 30.0
-
-#define K_P 80.0
-#define K_I 0.0
-#define K_D 5.0
-
-float PI2 = 2.0 * PI;
 
 float WheelBase = 120.0;
 float WheelDiameter = 80.0;
@@ -49,22 +43,11 @@ long LastRightTacho = 0;
 
 float RobotX = 0;
 float RobotY = 0;
-float RobotH = 0;
+float RobotH = 0;		// heading degrees!!!
 
 int hsInBuffIdx = 0;
 ubyte hsInBuff[128];
 char json[128];	// (not thread safe!)
-
-//---  Util  -------------------------
-
-float NormalizeAngle(float angle)
-{
-	while (angle > PI2)
-		angle -= PI2;
-	while (angle < -PI2)
-		angle += PI2;
-	return angle;
-}
 
 float GetGyroRateZ()
 {
@@ -89,26 +72,12 @@ float meanGyroZValue(int interval, int N)
 	return som / N;
 }
 
-float ToDegrees(float a)
-{
-	return a * 180.0 / PI;
-}
-
-float ToRadians(float a)
-{
-	return a * PI / 180.0;
-}
 
 void WaitMotorsIdle()
 {
 	while (nMotorRunState[M1] != runStateIdle &&
 		nMotorRunState[M1] != runStateIdle)
 	wait1Msec(20);
-}
-
-float Distance(float x1, float y1, float x2, float y2)
-{
-	return sqrt((x2-x1)*(x2-x1) + (y2-y1)*(y2-y1));
 }
 
 //---  incoming subscriptions  -------------------------
@@ -122,7 +91,7 @@ task CheckMQTT()
 			nxtReadRawHS(&hsInBuff[hsInBuffIdx], 1);
 			if (hsInBuff[hsInBuffIdx] == '\n')
 			{
-				WDS("MQTT msg recvd: {0}\n", hsInBuff);
+				_T("MQTT msg recvd: {0}\n", hsInBuff);
 				// +++ process
 				hsInBuffIdx = 0;
 				continue;
@@ -151,6 +120,8 @@ long LastPoseTime = time1[T1];
 
 void CalcPoseWithGyro()
 {
+	float a = 5 / 0;	// not implemented
+
 	// milli-degree/second is what the gyro uses
 	// time1 uses milliseconds
 	long nowTime = time1[T1];
@@ -187,7 +158,7 @@ void CalcPoseWithGyro()
 	varianceFilterUpdated = varianceFilterPredicted +
 	kalmanGain * (varianceTacho - varianceFilterPredicted);
 
-	RobotH = NormalizeAngle(tachoUpdated);
+	RobotH = NormalizeHeading(tachoUpdated);
 
 	RobotX += delta * sin(RobotH);
 	RobotY += delta * -cos(RobotH);
@@ -198,14 +169,14 @@ void CalcPoseWithGyro()
 
 	sprintf(json, "PUBnxt/Pose{\"x\":%f,\"y\":%f,\"h\":%f}\n",
 	RobotX, RobotY, RobotH);
-	//WDS(json);
+	//_T(json);
 	nxtWriteRawHS(json, strlen(json), 0);
 }
 
 void CalcPose()
 {
 	long nowTime = time1[T1];
-	// for velocity (not used ATM)
+
 	float dt = (nowTime - LastPoseTime) / 1000.0;
 
 	CurrentLeftTacho = nMotorEncoder[M2];
@@ -221,18 +192,18 @@ void CalcPose()
 		tachoMeasured = (leftTachoChange - rightTachoChange) *
 	ticksToMM / WheelBase;
 
-	RobotX += delta * sin(RobotH + (tachoMeasured / 2.0));
-	RobotY += delta * -cos(RobotH + (tachoMeasured / 2.0));
-	RobotH += tachoMeasured;
+	RobotX += delta * -sin(RobotH + (tachoMeasured / 2.0));
+	RobotY += delta * cos(RobotH + (tachoMeasured / 2.0));
+	RobotH += ToDegrees(tachoMeasured);
+	RobotH = NormalizeHeading(RobotH);
 
 	LastLeftTacho = CurrentLeftTacho;
 	LastRightTacho = CurrentRightTacho;
 	LastPoseTime = nowTime;
 
-	sprintf(json, "PUBPilot/Pose{\"x\":%f,\"y\":%f,\"h\":%f}\r\n",
-	RobotX, RobotY, RobotH);
-	WDS(json);
-	//nxtWriteRawHS(json, strlen(json), 0);
+	sprintf(json, "PUBPilot/Pose{\"X\":%f,\"Y\":%f,\"H\":%f}\r\n", RobotX, RobotY, RobotH);
+	//_T(json);
+	nxtWriteRawHS(json, strlen(json), 0);
 }
 
 task UpdatePose()
@@ -247,20 +218,24 @@ task UpdatePose()
 
 //--- PID -------------------
 
-float pidPreviousError = 0;
-float pidIntegral, derivative;	// global so we can debug
+#define K1_P 2.0
+#define K1_I 0.0
+#define K1_D 0.1
 
-float GetPidTurnPower(float sp, float dt)
+float pid1PreviousError = 0;
+float pid1Integral, pid1Derivative;	// global so we can debug
+
+float Pid1(float sp, float pv, float dt)
 {
 	float p = 0;
 	if (dt > 0)
 	{
-		float error = sp - RobotH;
-		pidIntegral = pidIntegral + error * dt;
-		derivative = (error - pidPreviousError) / dt;
-		p = K_P * error + K_I * pidIntegral + K_D * derivative;
+		float error = sp - pv;
+		pid1Integral = pid1Integral + error * dt;
+		pid1Derivative = (error - pid1PreviousError) / dt;
+		p = K1_P * error + K1_I * pid1Integral + K1_D * pid1Derivative;
 		p = p > 100 ? 100 : p < -100 ? -100 : p;
-		pidPreviousError = error;
+		pid1PreviousError = error;
 	}
 	return p;
 }
@@ -276,7 +251,7 @@ void Rotate(float angle)
 	//	nSyncedTurnRatio = -100;	// rotate in place
 	//	angle = NormalizeAngle(RobotH + angle);
 	//	sprintf(txt, "Pid Rotate sp(%f) pv(%f)\n", ToDegrees(angle), ToDegrees(RobotH));
-	//	WDS(txt);
+	//	_T(txt);
 	//	while (abs(pidPreviousError) > ToRadians(2))
 	//	{
 	//		long timeNow = time1[T1];
@@ -286,45 +261,45 @@ void Rotate(float angle)
 	//		lastTime = timeNow;
 	//		sprintf(txt, "PidRot sp(%f) pv(%f) error(%f) dt(%f) pwr(%f)\n",
 	//		ToDegrees(angle), ToDegrees(RobotH), pidPreviousError, dt, p);
-	//		WDS(txt);
+	//		_T(txt);
 	//		wait1Msec(20);
 	//	}
 	//	motor[M1] = 0;
 	//	WaitMotorsIdle();
 	//	sprintf(txt, "Rotate complete sp(%f) pv(%f)\n", ToDegrees(angle), ToDegrees(RobotH));
-	//	WDS(txt);
+	//	_T(txt);
 }
 
 void Move(float x, float y)
 {
 	long lastTime = time1[T1];
+	sprintf(dtxt, "--Move: %f, %f", x, y);
 
-	//sprintf(txt, "goal: %f, %f\n", goalX, goalY);
-	//WDS(txt);
-
-	if (Distance(x, y, RobotX, RobotY) > MoveCompleteThreshold)
+	while (true)
 	{
-		while (true)
-		{
-			float distanceToGoal = Distance(x, y, RobotX, RobotY);
-			float desiredH = atan2((y - RobotY),(x - RobotX)) + PI/2;
-			//WDS(txt, "Distance to goal: %f\n", distanceToGoal);
-			//WDS(txt, "pose: %f, %f\n", RobotX, RobotY);
-			WDS("Desired hdg to goal: %f\n", desiredH);
+		float distanceToGoal = Distance(x, y, RobotX, RobotY);
 
-			// threshold needs to be reasonable given update rate
-			// 120 is same as wheelbase
-			if (distanceToGoal < MoveCompleteThreshold)
-				break;
-			long nowTime = time1[T1];
-			float dt = (nowTime - lastTime) / 1000.0;
-			int p = (int)GetPidTurnPower(desiredH, dt);
-			motor[M2] = BasePower + p;
-			motor[M1] = BasePower;
-			lastTime = nowTime;
-			// update N times per sec
-			wait1Msec(1000 / MoveUpdateRate);
-		}
+		// threshold needs to be reasonable given update rate
+		if (distanceToGoal < MoveCompleteThreshold)
+			break;
+
+		float headingToGoal = atan2( (x-RobotX),(y-RobotY)) * 180.0 / PI;
+
+		long nowTime = time1[T1];
+		float dt = (nowTime - lastTime) / 1000.0;
+
+		int p = (int)Pid1(headingToGoal, RobotH, dt);
+		motor[M2] = BasePower + p;
+		motor[M1] = BasePower;
+
+		lastTime = nowTime;
+
+		sprintf(dtxt, "goal: %f, %f, bearing %f\n", x, y, headingToGoal); _T(dtxt);
+		sprintf(dtxt, "Distance to goal: %f\n", distanceToGoal); _T(dtxt);
+		sprintf(dtxt, "pose: %f, %f, %f\n", RobotX, RobotY, RobotH); _T(dtxt);
+
+		// update N times per sec
+		wait1Msec(1000/2);
 	}
 
 	motor[M1] = 0;
@@ -334,43 +309,9 @@ void Move(float x, float y)
 
 void Move(float d)
 {
-	float basePower = 30.0;
-	float initialH = RobotH;
-	long lastTime = time1[T1];
-
-	// where we are going
-	float goalX = RobotX + d * -sin(RobotH);	// you really have to watch out, robot vs view x/y
-	float goalY = RobotY - d * cos(RobotH);
-
-	//WDS(txt, "goal: %f, %f\n", goalX, goalY);
-
-	float distanceToGoal = Distance(goalX, goalY, RobotX, RobotY);
-	//WDS("Distance to goal: %f\n", distanceToGoal);
-	if (distanceToGoal > MoveCompleteThreshold)
-	{
-		while (true)
-		{
-			distanceToGoal = Distance(goalX, goalY, RobotX, RobotY);
-			//WDS("Distance to goal: %f\n", distanceToGoal);
-			//WDS(txt, "pose: %f, %f\n", RobotX, RobotY);
-
-			// threshold needs to be reasonable given update rate
-			// 120 is same as wheelbase
-			if (distanceToGoal < MoveCompleteThreshold)
-				break;
-			long nowTime = time1[T1];
-			float dt = (nowTime - lastTime) / 1000.0;
-			int p = (int)GetPidTurnPower(initialH, dt);
-			motor[M2] = BasePower + p;
-			motor[M1] = BasePower;
-			lastTime = nowTime;
-			// update N times per sec
-			wait1Msec(1000/30);
-		}
-	}
-
-	motor[M1] = 0;
-	motor[M2] = 0;
+	float goalX = RobotX + d * -sin(ToRadians(RobotH));
+	float goalY = RobotY + d * cos(ToRadians(RobotH));
+	Move (goalX, goalY);
 	WaitMotorsIdle();
 }
 
@@ -379,7 +320,7 @@ void Move(float d)
 task main()
 {
 	clearDebugStream();
-	WDS("xbee_kalman1.c\n");
+	_T("xbee_kalman1.c\n");
 
 	// geometry
 	ticksToMM = PI * WheelDiameter / TicksPerRevolution;
@@ -402,7 +343,7 @@ task main()
 	wait1Msec(250);		// allow time for reconfigure
 
 	GyroOffset = meanGyroZValue(5,100);
-	WDS("GyroOffset %f\n", GyroOffset);
+	_T("GyroOffset %f\n", GyroOffset);
 
 	// initialise the kalman filter;
 	tachoUpdated = GetGyroRateZ();
@@ -412,16 +353,14 @@ task main()
 	//startTask(CheckMQTT);
 	startTask(UpdatePose);
 
-	// make a move
-	Move(100, 0);			// x,y
-	//Move(0, 0);			// x,y
+	Move(200);
 	//Rotate(ToRadians(180));
 
 	//testing
 	//while (true)
 	//	wait1Msec(100);
 
-	WDS("Done\n");
+	_T("Done\n");
 	wait1Msec(100);
 	stopAllTasks();
 }

@@ -5,6 +5,7 @@
         xmlns:spiked3="clr-namespace:spiked3"
         xmlns:xtc="http://schemas.xceed.com/wpf/xaml/toolkit"
         xmlns:helix="clr-namespace:HelixToolkit.Wpf;assembly=HelixToolkit.Wpf"
+              xmlns:ll="clr-namespace:RpLidarLib;assembly=RpLidar"
         Title="winViz" Height="960" Width="1280" Loaded="Window_Loaded"
         DataContext="{Binding RelativeSource={RelativeSource Self}}" Closing="Window_Closing">
 
@@ -74,41 +75,7 @@
                     </Grid>
                 </RibbonGroup>
             </RibbonTab>
-            <RibbonTab Header="Robot">
-                <RibbonGroup Header="Move">
-                    <RibbonButton Label="Forward"  LargeImageSource="Images/Road-Forward.png" Click="Forward_Click" />
-                    <RibbonButton Label="Stop" Click="Stop_Click" LargeImageSource="Images/Stop Media.png" />
-                    <RibbonButton Label="Left"  LargeImageSource="Images/Road-Left.png" />
-                    <RibbonButton Label="Right"  LargeImageSource="Images/Road-Right.png" />
-                    <RibbonButton Label="Back"  LargeImageSource="Images/Road-Backward.png" Click="Back_Click" />
-                    <RibbonButton Label="U-Turn"  LargeImageSource="Images/U-turn.png" />
-
-                    <Grid Width="96" Margin="16,0,0,0">
-                        <Grid.ColumnDefinitions>
-                            <ColumnDefinition />
-                            <ColumnDefinition />
-                        </Grid.ColumnDefinitions>
-                        <Grid.RowDefinitions>
-                            <RowDefinition />
-                            <RowDefinition />
-                            <RowDefinition />
-                            <RowDefinition />
-                        </Grid.RowDefinitions>
-
-                        <TextBlock Text="Speed" Grid.Row="0" Grid.Column="0" />
-                        <TextBlock Text="{Binding Speed,FallbackValue=50}" Grid.Row="0" Grid.Column="1" HorizontalAlignment="Center" />
-                        <Slider Minimum="-100" Maximum="100" Value="{Binding Speed}" SmallChange="5" LargeChange="20"
-                                TickFrequency="10" IsSnapToTickEnabled="True" TickPlacement="TopLeft"
-                                Grid.Row="1" Grid.ColumnSpan="2" ValueChanged="SpeedChanged" />
-
-                        <TextBlock Text="Spare" Grid.Row="2" Grid.Column="0" />
-                        <TextBlock Text="{Binding Spare,FallbackValue=50}" Grid.Row="2" Grid.Column="1" HorizontalAlignment="Center" />
-                        <Slider Minimum="0" Maximum="100" Value="{Binding DrawScale}" SmallChange="5" LargeChange="20"
-                                TickFrequency="10" IsSnapToTickEnabled="True" TickPlacement="TopLeft"
-                                Grid.Row="3" Grid.ColumnSpan="2" />
-                    </Grid>
-                </RibbonGroup>
-            </RibbonTab>
+            
         </Ribbon>
 
         <StatusBar DockPanel.Dock="Bottom">
@@ -121,6 +88,17 @@
                 <RowDefinition Height="4" />
                 <RowDefinition Height="2*" />
             </Grid.RowDefinitions>
+            <Grid.ColumnDefinitions>
+                <ColumnDefinition />
+                <ColumnDefinition Width="4"/>
+                <ColumnDefinition Width="320"/>                
+            </Grid.ColumnDefinitions>
+
+            <StackPanel Grid.Column="2" Grid.RowSpan="3" >
+                <Button Content="..." Width="164" Margin="0,4,0,4"/>
+                <Separator Margin="12" Width="260" />
+                <ListBox ItemsSource="{Binding MiniUis}" Background="{x:Null}" Margin="0,4,0,4" BorderBrush="Transparent"/>
+            </StackPanel>
 
             <Grid Background="{StaticResource worldBg}">
 
@@ -134,13 +112,13 @@
                     <helix:GridLinesVisual3D Length="100" Width="100" MajorDistance="10" MinorDistance="5" x:Name="grid1" />
                 </helix:HelixViewport3D>
 
-                <Border x:Name="overView1" HorizontalAlignment="Right" VerticalAlignment="Bottom" BorderBrush="Black" BorderThickness="4" Margin="4" Width="240" Height="180"
-                        Visibility="{Binding IsChecked, Converter={StaticResource BooleanToVisibilityConverter}, ElementName=viewOverview}">
+                <!--<Border x:Name="overView1" HorizontalAlignment="Right" VerticalAlignment="Bottom" BorderBrush="Black" BorderThickness="4" Margin="4" Width="240" Height="180"
+                        Visibility="{Binding IsChecked, Converter={StaticResource BooleanToVisibilityConverter}, ElementName=viewOverview}" Background="White">
                     <helix:HelixViewport3D x:Name="overview" Background="Gray" ShowViewCube="False">
                         <helix:SunLight />
                         <helix:CubeVisual3D Center="0,0,0" Transform="{Binding Transform, ElementName=robot1}" Material="{Binding Material, ElementName=robot1}" />
                     </helix:HelixViewport3D>
-                </Border>
+                </Border>-->
 
                 <StackPanel Orientation="Horizontal" Margin="0,0,0,12" VerticalAlignment="Bottom" HorizontalAlignment="Center" Background="White">
                     <StackPanel.Resources>
@@ -171,8 +149,8 @@
                 </Grid>
             </Grid>
 
-            <local:ObjectsPanel x:Name="viewObjects1" HorizontalAlignment="Left" />
             <TextBlock Text="Spiked3.com" Foreground="Orange" FontSize="32" Margin="64,12,0,0" HorizontalAlignment="Left" VerticalAlignment="Top" />
+            <local:ObjectsPanel x:Name="viewObjects1" HorizontalAlignment="Left" />
 
             <GridSplitter Grid.Row="1" VerticalAlignment="Stretch" ResizeDirection="Rows" HorizontalAlignment="Stretch" Grid.ColumnSpan="2" BorderBrush="{DynamicResource {x:Static SystemColors.ActiveBorderBrushKey}}" BorderThickness="4" />
 

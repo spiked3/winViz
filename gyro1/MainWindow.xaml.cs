@@ -21,6 +21,7 @@ using spiked3.winViz.Properties;
 using spiked3.winRobot;
 
 using HelixToolkit.Wpf;
+using System.Windows.Controls;
 
 // done move console test to test group
 // todo WPF bug; expander blocks focus even when not expanded
@@ -122,6 +123,19 @@ namespace spiked3.winViz
         public static readonly DependencyProperty StatusTextProperty =
             DependencyProperty.Register("StatusText", typeof(string), typeof(MainWindow), new PropertyMetadata("StatusText"));
 
+
+        public ObservableCollection<UIElement> MiniUis
+        {
+            get { return (ObservableCollection<UIElement>)GetValue(MiniUisProperty); }
+            set { SetValue(MiniUisProperty, value); }
+        }
+
+        // Using a DependencyProperty as the backing store for MiniUis.  This enables animation, styling, binding, etc...
+        public static readonly DependencyProperty MiniUisProperty =
+            DependencyProperty.Register("MiniUis", typeof(ObservableCollection<UIElement>), typeof(MainWindow), new PropertyMetadata(new ObservableCollection<UIElement>()));
+
+
+
         private const string Broker = "127.0.0.1";
         private MqttClient Mqtt;
 
@@ -166,6 +180,10 @@ namespace spiked3.winViz
             Trace.WriteLine("MQTT Connected", "1");
 
             viewObjects1.Add(Mqtt);
+
+            // +++ stub
+            MiniUis.Add(new LidarPanel { Width=306, Height = 320, Margin = new Thickness(0, 4, 0, 4) });
+            MiniUis.Add(new Separator { Width = 260, Margin = new Thickness(12) });
         }
 
         private class RobotPose
@@ -300,37 +318,13 @@ namespace spiked3.winViz
             console1.Test();
         }
 
-        private void Forward_Click(object sender, RoutedEventArgs e)
-        {
-            MotorDirectionForward = true;
-            if (Mqtt != null) Mqtt.Publish("PC/M1", string.Format("\"p\":{0}", Speed).ToBytes());
-        }
-
-        private void Stop_Click(object sender, RoutedEventArgs e)
-        {
-            if (Mqtt != null) Mqtt.Publish("PC/M1", string.Format("\"p\":{0}", 0).ToBytes());
-        }
-
-        private void Back_Click(object sender, RoutedEventArgs e)
-        {
-            MotorDirectionForward = false;
-            if (Mqtt != null) Mqtt.Publish("PC/M1", string.Format("\"p\":{0}", -Speed).ToBytes());
-        }
-
-        private void SpeedChanged(object sender, RoutedPropertyChangedEventArgs<double> e)
-        {
-            if (Mqtt != null)
-                Mqtt.Publish("PC/M1", string.Format("\"p\":{0}", MotorDirectionForward ? Speed : -Speed).ToBytes());
-        }
-
-        private void Reset_Click(object sender, RoutedEventArgs e)
-        {
-            NewRobotPose("Pilot", 0, 0, 0, 0);
-            firstStep = true;
-        }
 
         void LoadRobot(string filename)
         {
+            // +++ handle multi robots
+            MiniUis.Add(new RobotPanel { Width = 300, ToolTip = filename });
+            MiniUis.Add(new Separator { Width = 260, Margin = new Thickness(12) });
+
             foreach (var r in RobotDictionary.Values)
                 view1.Children.Remove(r);
             RobotDictionary.Clear();        // we are only supporting one at the moment
@@ -367,6 +361,12 @@ namespace spiked3.winViz
             NewRobotPose("Pilot", 0, 0, 0, 0);
             firstStep = true;
             LastRobot = filename;
+        }
+
+        private void Reset_Click(object sender, RoutedEventArgs e)
+        {
+            NewRobotPose("Pilot", 0, 0, 0, 0);
+            firstStep = true;
         }
 
         private void Model_Click(object sender, RoutedEventArgs e)

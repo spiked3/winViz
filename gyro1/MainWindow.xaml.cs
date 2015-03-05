@@ -1,6 +1,7 @@
 ﻿using System;
 using System.Collections.Generic;
 using System.Collections.ObjectModel;
+using System.Collections.Specialized;
 using System.Diagnostics;
 using System.Threading;
 using System.Windows;
@@ -18,7 +19,7 @@ using uPLibrary.Networking.M2Mqtt.Messages;
 
 using spiked3;
 using spiked3.winViz.Properties;
-using spiked3.winRobot;
+using spiked3.winRobotLib;
 
 using RpLidarLib;
 using RnSlamLib;
@@ -52,7 +53,8 @@ namespace spiked3.winViz
         private Vector3D yAxis = new Vector3D(0, 1, 0);
         private Vector3D zAxis = new Vector3D(0, 0, 1);
 
-        private bool MotorDirectionForward = true;
+        public ObservableCollection<object> ViewObjects { get { return _ViewObjects; } }
+        ObservableCollection<object> _ViewObjects = new ObservableCollection<object>();
 
         public Brush RobotBrush
         {
@@ -133,11 +135,8 @@ namespace spiked3.winViz
             set { SetValue(MiniUisProperty, value); }
         }
 
-        // Using a DependencyProperty as the backing store for MiniUis.  This enables animation, styling, binding, etc...
         public static readonly DependencyProperty MiniUisProperty =
             DependencyProperty.Register("MiniUis", typeof(ObservableCollection<UIElement>), typeof(MainWindow), new PropertyMetadata(new ObservableCollection<UIElement>()));
-
-
 
         private const string Broker = "127.0.0.1";
         private MqttClient Mqtt;
@@ -182,13 +181,20 @@ namespace spiked3.winViz
             State = "MQTT Connected";
             Trace.WriteLine("MQTT Connected", "1");
 
-            viewObjects1.Add(Mqtt);
+            ViewObjectsAdd(Mqtt);
 
-            // +++ stub
-            var u = new LidarPanel { Width = 306, Height = 320, Margin = new Thickness(0, 4, 0, 4) };
+            var u = new LidarPanel { Width = 320, Height = 300, Margin = new Thickness(0, 4, 0, 4) };
             LidarCanvas = u.LidarCanvas;
-            MiniUis.Add(u);
-            MiniUis.Add(new Separator { Width = 260, Margin = new Thickness(12) });
+            MiniUiAdd(u, "LIDAR", Brushes.Red);
+        }
+
+        void MiniUiAdd(UIElement u, string title, Brush bg)
+        {
+            var sp = new StackPanel();
+            sp.Children.Add(new TextBlock { Text = title, Background = bg, Foreground = Brushes.White, Padding = new Thickness(1) });
+            sp.Children.Add(u);
+            MiniUis.Add(sp);
+            //MiniUis.Add(new Separator { Width = 260, Margin = new Thickness(12) });
         }
 
         private class RobotPose
@@ -332,8 +338,7 @@ namespace spiked3.winViz
                 if (MiniUis[i] is RobotPanel)
                     MiniUis.RemoveAt(i);
 
-            MiniUis.Add(new RobotPanel { Width = 300, ToolTip = filename });
-            MiniUis.Add(new Separator { Width = 260, Margin = new Thickness(12) });
+            MiniUiAdd(new RobotPanel { Width = 300, ToolTip = filename }, "Robot1", Brushes.Blue);
 
             foreach (var r in RobotDictionary.Values)
                 view1.Children.Remove(r);
@@ -367,7 +372,7 @@ namespace spiked3.winViz
 
             RobotDictionary.Add("Pilot", robot);
             view1.Children.Add(robot);
-            viewObjects1.Add(robot);
+            ViewObjectsAdd(robot);
 
             NewRobotPose("Pilot", 0, 0, 0, 0);
             firstStep = true;
@@ -472,22 +477,37 @@ namespace spiked3.winViz
             Dispatcher.InvokeAsync(() =>
             {
                 // provide an immutable sorted list for LIDARCanvas and others to use
-            LidarCanvas.Scans = new List<ScanPoint>(scanset.Length);
+                LidarCanvas.Scans = new List<ScanPoint>(scanset.Length);
 
-            foreach (ScanPoint p in scanset)
-                if (p != null)
-                    LidarCanvas.Scans.Add(new ScanPoint
-                    {
-                        Angle = p.Angle * Math.PI / 180.0,
-                        Distance = p.Distance,
-                        Quality = p.Quality
-                    });
+                foreach (ScanPoint p in scanset)
+                    if (p != null)
+                        LidarCanvas.Scans.Add(new ScanPoint
+                        {
+                            Angle = p.Angle * Math.PI / 180.0,
+                            Distance = p.Distance,
+                            Quality = p.Quality
+                        });
 
-            List<double> derivatives = Slam.ComputeScanDerivatives(LidarCanvas.Scans);
-            LidarCanvas.Landmarks = Slam.FindLandmarksFromDerivatives(LidarCanvas.Scans, derivatives);
+                List<double> derivatives = Slam.ComputeScanDerivatives(LidarCanvas.Scans);
+                LidarCanvas.Landmarks = Slam.FindLandmarksFromDerivatives(LidarCanvas.Scans, derivatives);
 
                 LidarCanvas.InvalidateVisual();
             });
         }
+
+        public void ViewObjectsAdd(object o)
+        {
+            ViewObjects.Add(o);
+            //if (CollectionChanged != null)
+            //    CollectionChanged(this, new NotifyCollectionChangedEventArgs(NotifyCollectionChangedAction.Add, o));
+        }
+
+        public void ViewObjectsRemove(object o)
+        {
+            ViewObjects.Remove(o);
+            //if (CollectionChanged != null)
+            //    CollectionChanged(this, new NotifyCollectionChangedEventArgs(NotifyCollectionChangedAction.Remove, o));
+        }
+
     }
 }

@@ -6,7 +6,7 @@ using System.Threading.Tasks;
 using System.Windows.Media.Media3D;
 
 
-namespace spiked3.winRobot
+namespace spiked3.winRobotLib
 {
     // provide coordinate tranform functions
     // +++ just a place holder for a ROS TF like service

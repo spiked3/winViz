@@ -2,7 +2,7 @@
 using Microsoft.Win32;
 using Newtonsoft.Json;
 using spiked3;
-using spiked3.winRobot;
+using spiked3.winRobotLib;
 using System;
 using System.Collections.Generic;
 using System.Collections.ObjectModel;
@@ -35,7 +35,7 @@ namespace PiBot
     }
 }
 
-namespace spiked3.winRobot
+namespace spiked3.winRobotLib
 {
     public class RobotBase : IWinRobot
     {

@@ -7,8 +7,8 @@
     <ProjectGuid>{B674C060-3809-4B4C-9E94-76A05C91B2CC}</ProjectGuid>
     <OutputType>Library</OutputType>
     <AppDesignerFolder>Properties</AppDesignerFolder>
-    <RootNamespace>spiked3.winRobot</RootNamespace>
-    <AssemblyName>winRobot</AssemblyName>
+    <RootNamespace>spiked3.winRobotLib</RootNamespace>
+    <AssemblyName>winRobotLib</AssemblyName>
     <TargetFrameworkVersion>v4.5</TargetFrameworkVersion>
     <FileAlignment>512</FileAlignment>
   </PropertyGroup>

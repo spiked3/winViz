@@ -5,7 +5,7 @@ VisualStudioVersion = 12.0.31101.0
 MinimumVisualStudioVersion = 10.0.40219.1
 Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "winViz", "gyro1\winViz.csproj", "{2AA72C8A-47D1-41C7-9651-23D20F88B716}"
 EndProject
-Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "winRobot", "winRobot\winRobot.csproj", "{B674C060-3809-4B4C-9E94-76A05C91B2CC}"
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "winRobotLib", "winRobot\winRobotLib.csproj", "{B674C060-3809-4B4C-9E94-76A05C91B2CC}"
 EndProject
 Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "PiBot", "PiBot\PiBot.csproj", "{C7749534-3FF5-49FC-8A1E-C8913CA80971}"
 EndProject

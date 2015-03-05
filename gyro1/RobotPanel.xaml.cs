@@ -15,9 +15,8 @@ using System.Windows.Shapes;
 
 namespace spiked3.winViz
 {
-    /// <summary>
-    /// Interaction logic for RobotPanel.xaml
-    /// </summary>
+    /// intent to be a loaded at runtime plugin, for each robot instance
+    /// 
     public partial class RobotPanel : UserControl
     {
         public RobotPanel()

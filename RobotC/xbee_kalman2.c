@@ -33,7 +33,7 @@ C M2 driveLeft
 
 float WheelBase = 120.0;
 float WheelDiameter = 80.0;
-int TicksPerRevolution = 360;
+int TicksPerRevolution = 360 * 20 / 12;
 float ticksToMM;		// calculated, this is what we need.
 
 long CurrentLeftTacho = 0;
@@ -71,7 +71,6 @@ float meanGyroZValue(int interval, int N)
 	}
 	return som / N;
 }
-
 
 void WaitMotorsIdle()
 {
@@ -167,7 +166,7 @@ void CalcPoseWithGyro()
 	LastRightTacho = CurrentRightTacho;
 	LastPoseTime = nowTime;
 
-	sprintf(json, "PUBnxt/Pose{\"x\":%f,\"y\":%f,\"h\":%f}\n",
+	sprintf(json, "PUBnxt/Pose{\"x\":%f,\"y\":%f,\"h\":%f}\r\n",
 	RobotX, RobotY, RobotH);
 	//_T(json);
 	nxtWriteRawHS(json, strlen(json), 0);
@@ -210,7 +209,7 @@ task UpdatePose()
 {
 	while (true)
 	{
-		//CalcPoseWithGyro();
+		//CalcPoseWithGyro(); or
 		CalcPose();
 		wait1Msec(1000 / PoseUpdateRate); // times per second to update
 	}
@@ -240,35 +239,11 @@ float Pid1(float sp, float pv, float dt)
 	return p;
 }
 
+#if 0
 void Rotate(float angle)
 {
-	//	+++ we need to pick base on left or right
-	//	but -100 is always turn in place, motor power needs to be influenced by direction
-	//	nSyncedTurnRatio = -100;	// rotate in place
-
-	//	char txt[128];
-	//	long lastTime = time1[T1];
-	//	nSyncedTurnRatio = -100;	// rotate in place
-	//	angle = NormalizeAngle(RobotH + angle);
-	//	sprintf(txt, "Pid Rotate sp(%f) pv(%f)\n", ToDegrees(angle), ToDegrees(RobotH));
-	//	_T(txt);
-	//	while (abs(pidPreviousError) > ToRadians(2))
-	//	{
-	//		long timeNow = time1[T1];
-	//		float dt = (timeNow - lastTime) / 1000.0;
-	//		float p = GetPidTurnPower(angle, dt);
-	//		motor[M1] = (int)p;
-	//		lastTime = timeNow;
-	//		sprintf(txt, "PidRot sp(%f) pv(%f) error(%f) dt(%f) pwr(%f)\n",
-	//		ToDegrees(angle), ToDegrees(RobotH), pidPreviousError, dt, p);
-	//		_T(txt);
-	//		wait1Msec(20);
-	//	}
-	//	motor[M1] = 0;
-	//	WaitMotorsIdle();
-	//	sprintf(txt, "Rotate complete sp(%f) pv(%f)\n", ToDegrees(angle), ToDegrees(RobotH));
-	//	_T(txt);
 }
+#endif
 
 void Move(float x, float y)
 {
@@ -323,7 +298,7 @@ task main()
 	_T("xbee_kalman1.c\n");
 
 	// geometry
-	ticksToMM = PI * WheelDiameter / TicksPerRevolution;
+	ticksToMM = TicksPerRevolution / PI * WheelDiameter;
 
 	//nSyncedMotors = synchAC; //frankly, worthless in v4.27
 	nMotorPIDSpeedCtrl[M1] = mtrSpeedReg;
@@ -336,9 +311,10 @@ task main()
 
 	// subscribe isnt really being used ATM, but it shows up on
 	// the bridge console indicating the connection is good
-	string sub = "SUBpc/#\n";
+	string sub = "SUBpc/#\r\n";
 	nxtWriteRawHS(sub, strlen(sub), 0);
 
+#if 0
 	MSIMUsetGyroFilter(MSIMU, MSIMU_GYRO_FILTER_LEVEL_4); // filtering
 	wait1Msec(250);		// allow time for reconfigure
 
@@ -348,19 +324,17 @@ task main()
 	// initialise the kalman filter;
 	tachoUpdated = GetGyroRateZ();
 	varianceFilterUpdated = 0;
+#endif
 
 	time1[T1] = 0;			// resest the clock
-	//startTask(CheckMQTT);
+	startTask(CheckMQTT);
 	startTask(UpdatePose);
 
 	Move(200);
 	//Rotate(ToRadians(180));
+	//Move(200);
 
-	//testing
-	//while (true)
-	//	wait1Msec(100);
-
+	stopAllTasks();
 	_T("Done\n");
 	wait1Msec(100);
-	stopAllTasks();
 }

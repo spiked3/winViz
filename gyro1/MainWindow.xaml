@@ -6,7 +6,9 @@
         xmlns:xtc="http://schemas.xceed.com/wpf/xaml/toolkit"
         xmlns:helix="clr-namespace:HelixToolkit.Wpf;assembly=HelixToolkit.Wpf"
               xmlns:ll="clr-namespace:RpLidarLib;assembly=RpLidar"
+              TextOptions.TextFormattingMode="Display"
         Title="winViz" Height="960" Width="1280" Loaded="Window_Loaded"
+              
         DataContext="{Binding RelativeSource={RelativeSource Self}}" Closing="Window_Closing">
 
     <RibbonWindow.Resources>
@@ -25,6 +27,7 @@
     </RibbonWindow.Resources>
 
     <DockPanel LastChildFill="True">
+        
         <Ribbon DockPanel.Dock="Top">
             <Ribbon.ApplicationMenu>
                 <!--  style me -->
@@ -75,12 +78,41 @@
                     </Grid>
                 </RibbonGroup>
             </RibbonTab>
-            
         </Ribbon>
+
 
         <StatusBar DockPanel.Dock="Bottom">
             <TextBlock Text="{Binding State}" />
         </StatusBar>
+
+        <Expander ExpandDirection="Left" DockPanel.Dock="Right" Background="White" IsExpanded="False">
+            <Expander.Header>
+                <TextBlock Text="User Interface">
+                    <TextBlock.LayoutTransform>
+                        <RotateTransform Angle="90" />
+                    </TextBlock.LayoutTransform>
+                </TextBlock>
+            </Expander.Header>
+                <ListBox ItemsSource="{Binding MiniUis}" Background="{x:Null}" Margin="0,4,0,4" BorderBrush="Transparent" />
+        </Expander>
+
+        <Expander x:Name="objectView1" ExpandDirection="Right" Background="White" DockPanel.Dock="Left">
+            <Expander.Header>
+                <TextBlock Text="Objects">
+                    <TextBlock.LayoutTransform>
+                        <RotateTransform Angle="-90" />
+                    </TextBlock.LayoutTransform>
+                </TextBlock>
+            </Expander.Header>
+            <Grid>
+                <Grid.RowDefinitions>
+                    <RowDefinition Height="1*" />
+                    <RowDefinition Height="2*" />
+                </Grid.RowDefinitions>
+                <ListBox x:Name="viewObjects1" ItemsSource="{Binding ViewObjects}" Grid.RowSpan="1" />
+                <xtc:PropertyGrid SelectedObject="{Binding SelectedItem, ElementName=viewObjects1}" Grid.Row="1" />
+            </Grid>
+        </Expander>
 
         <Grid>
             <Grid.RowDefinitions>
@@ -88,19 +120,6 @@
                 <RowDefinition Height="4" />
                 <RowDefinition Height="2*" />
             </Grid.RowDefinitions>
-            <Grid.ColumnDefinitions>
-                <ColumnDefinition Width="5*"/>
-                <ColumnDefinition Width="4"/>
-                <ColumnDefinition Width="2*"/>                
-            </Grid.ColumnDefinitions>
-
-            <GridSplitter Grid.Column="1" HorizontalAlignment="Stretch" VerticalAlignment="Stretch" Grid.RowSpan="3" BorderBrush="{DynamicResource {x:Static SystemColors.ActiveBorderBrushKey}}" />
-
-            <StackPanel Grid.Column="2" Grid.RowSpan="3" HorizontalAlignment="Center">
-                <Button Content="..." Width="164" Margin="0,4,0,4"/>
-                <Separator Margin="12" Width="260" />
-                <ListBox ItemsSource="{Binding MiniUis}" Background="{x:Null}" Margin="0,4,0,4" BorderBrush="Transparent"/>
-            </StackPanel>
 
             <Grid Background="{StaticResource worldBg}">
 
@@ -151,19 +170,13 @@
                 </Grid>
             </Grid>
 
-            <TextBlock Text="Spiked3.com" Foreground="Orange" FontSize="32" Margin="64,12,0,0" HorizontalAlignment="Left" VerticalAlignment="Top" />
-            <local:ObjectsPanel x:Name="viewObjects1" HorizontalAlignment="Left" />
+            <spiked3:Console x:Name="console1" Grid.Row="2"/>
 
             <GridSplitter Grid.Row="1" VerticalAlignment="Stretch" ResizeDirection="Rows" HorizontalAlignment="Stretch" Grid.ColumnSpan="2" BorderBrush="{DynamicResource {x:Static SystemColors.ActiveBorderBrushKey}}" BorderThickness="4" />
 
-            <Grid Grid.Row="2">
-                <Grid.ColumnDefinitions>
-                    <ColumnDefinition />
-                    <ColumnDefinition Width="Auto" />
-                </Grid.ColumnDefinitions>
+            <TextBlock Text="Spiked3.com" Foreground="Orange" FontSize="32" Margin="64,12,0,0" HorizontalAlignment="Left" VerticalAlignment="Top" />
 
-                <spiked3:Console x:Name="console1" />
-            </Grid>
         </Grid>
+        
     </DockPanel>
 </RibbonWindow>

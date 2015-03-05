@@ -79,9 +79,6 @@
     <Compile Include="LidarPanel.xaml.cs">
       <DependentUpon>LidarPanel.xaml</DependentUpon>
     </Compile>
-    <Compile Include="ObjectsPanel.xaml.cs">
-      <DependentUpon>ObjectsPanel.xaml</DependentUpon>
-    </Compile>
     <Compile Include="PixyCam.cs" />
     <Compile Include="Plumbing\Console.xaml.cs">
       <DependentUpon>Console.xaml</DependentUpon>
@@ -94,10 +91,6 @@
       <Generator>MSBuild:Compile</Generator>
     </Page>
     <Page Include="LidarPanel.xaml">
-      <SubType>Designer</SubType>
-      <Generator>MSBuild:Compile</Generator>
-    </Page>
-    <Page Include="ObjectsPanel.xaml">
       <SubType>Designer</SubType>
       <Generator>MSBuild:Compile</Generator>
     </Page>
@@ -184,9 +177,9 @@
       <Project>{7ed2c620-b656-49f9-88f2-23521a12c041}</Project>
       <Name>RnSlamLib</Name>
     </ProjectReference>
-    <ProjectReference Include="..\winRobot\winRobot.csproj">
+    <ProjectReference Include="..\winRobot\winRobotLib.csproj">
       <Project>{b674c060-3809-4b4c-9e94-76a05c91b2cc}</Project>
-      <Name>winRobot</Name>
+      <Name>winRobotLib</Name>
     </ProjectReference>
   </ItemGroup>
   <ItemGroup>

@@ -15,9 +15,7 @@ using System.Windows.Shapes;
 
 namespace spiked3.winViz
 {
-    /// <summary>
-    /// Interaction logic for LidarPanel.xaml
-    /// </summary>
+    /// intent to be a loaded at runtime plugin
     public partial class LidarPanel : UserControl
     {
         public LidarPanel()

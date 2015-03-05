@@ -40,12 +40,12 @@
                         <RibbonButton Label="Step"  LargeImageSource="Images/Media-Pause.png" Click="Step_Click" />
                         <RibbonButton Label="MQTT"  LargeImageSource="Images/Chat - Next-01.png" Click="TestP_Click" />
                         <RibbonButton Label="MQTT-SN" LargeImageSource="Images/Chat - Next-03.png" Click="MqttSn_Click" />
-                        <RibbonButton Label="OFD" Click="RibbonButton_Click" />
+                        <RibbonButton Label="LIDAR" Click="LIDAR_Click " LargeImageSource="Images/Radar New.png" />
                     </StackPanel>
                 </RibbonGroup>
                 <RibbonGroup Header="Main">
                     <RibbonButton Label="Reset"  LargeImageSource="Images/Command-Reset.png" Click="Reset_Click" />
-                    <RibbonButton Label="Add Robot ..." SmallImageSource="Images/Robot.png" Click="Model_Click" />
+                    <RibbonButton Label="Robot ..." SmallImageSource="Images/Robot.png" Click="Model_Click" />
                 </RibbonGroup>
                 <RibbonGroup Header="Options">
                     <RibbonGroup.Resources>
@@ -89,12 +89,14 @@
                 <RowDefinition Height="2*" />
             </Grid.RowDefinitions>
             <Grid.ColumnDefinitions>
-                <ColumnDefinition />
+                <ColumnDefinition Width="5*"/>
                 <ColumnDefinition Width="4"/>
-                <ColumnDefinition Width="320"/>                
+                <ColumnDefinition Width="2*"/>                
             </Grid.ColumnDefinitions>
 
-            <StackPanel Grid.Column="2" Grid.RowSpan="3" >
+            <GridSplitter Grid.Column="1" HorizontalAlignment="Stretch" VerticalAlignment="Stretch" Grid.RowSpan="3" BorderBrush="{DynamicResource {x:Static SystemColors.ActiveBorderBrushKey}}" />
+
+            <StackPanel Grid.Column="2" Grid.RowSpan="3" HorizontalAlignment="Center">
                 <Button Content="..." Width="164" Margin="0,4,0,4"/>
                 <Separator Margin="12" Width="260" />
                 <ListBox ItemsSource="{Binding MiniUis}" Background="{x:Null}" Margin="0,4,0,4" BorderBrush="Transparent"/>

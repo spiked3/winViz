@@ -20,6 +20,9 @@ using spiked3;
 using spiked3.winViz.Properties;
 using spiked3.winRobot;
 
+using RpLidarLib;
+using RnSlamLib;
+
 using HelixToolkit.Wpf;
 using System.Windows.Controls;
 
@@ -182,7 +185,9 @@ namespace spiked3.winViz
             viewObjects1.Add(Mqtt);
 
             // +++ stub
-            MiniUis.Add(new LidarPanel { Width=306, Height = 320, Margin = new Thickness(0, 4, 0, 4) });
+            var u = new LidarPanel { Width = 306, Height = 320, Margin = new Thickness(0, 4, 0, 4) };
+            LidarCanvas = u.LidarCanvas;
+            MiniUis.Add(u);
             MiniUis.Add(new Separator { Width = 260, Margin = new Thickness(12) });
         }
 
@@ -318,16 +323,22 @@ namespace spiked3.winViz
             console1.Test();
         }
 
-
         void LoadRobot(string filename)
         {
             // +++ handle multi robots
+
+            // for now - delete existing panel if there
+            for (int i = MiniUis.Count - 1; i >= 0; i--)
+                if (MiniUis[i] is RobotPanel)
+                    MiniUis.RemoveAt(i);
+
             MiniUis.Add(new RobotPanel { Width = 300, ToolTip = filename });
             MiniUis.Add(new Separator { Width = 260, Margin = new Thickness(12) });
 
             foreach (var r in RobotDictionary.Values)
                 view1.Children.Remove(r);
             RobotDictionary.Clear();        // we are only supporting one at the moment
+
             MeshGeometryVisual3D robot = new MeshGeometryVisual3D();
 
             MeshBuilder mb = new MeshBuilder(false, false);
@@ -387,9 +398,96 @@ namespace spiked3.winViz
             }).Start();
         }
 
-        private void RibbonButton_Click(object sender, RoutedEventArgs e)
+        private void LIDAR_Click(object sender, RoutedEventArgs e)
         {
-            new ImportDlg().ShowDialog();
+            InitLIDAR();
+        }
+
+        RpLidarDriver RpLidar;
+        Slam Slam;
+        LidarCanvas LidarCanvas;
+
+        //public List<ScanPoint> Scans
+        //{
+        //    get { return (List<ScanPoint>)GetValue(ScansProperty); }
+        //    set { SetValue(ScansProperty, value); }
+        //}
+
+        //public static readonly DependencyProperty ScansProperty =
+        //    DependencyProperty.Register("Scans", typeof(List<ScanPoint>), typeof(MainWindow), new PropertyMetadata(new List<Landmark>()));
+
+        //public List<Landmark> Landmarks
+        //{
+        //    get { return (List<Landmark>)GetValue(LandmarksProperty); }
+        //    set { SetValue(LandmarksProperty, value); }
+        //}
+
+        //public static readonly DependencyProperty LandmarksProperty =
+        //    DependencyProperty.Register("Landmarks", typeof(List<Landmark>), typeof(MainWindow), new PropertyMetadata(new List<Landmark>()));
+
+        void InitLIDAR()
+        {
+            Slam = new Slam();
+            try
+            {
+                RpLidar = new RpLidarDriver("com6");
+            }
+            catch (Exception ex)
+            {
+                Trace.WriteLine("Exception opening LIDAR COM port, LIDAR not available.", "error");
+                Trace.WriteLine(ex.Message, "1");
+                return;
+            }
+
+            RpLidar.NewScanSet += LidarNewScanSet;
+
+            // retry until valid device info
+            int tries = 0;
+            while (++tries < 5)
+            {
+                LidarDevInfoResponse di;
+                if (RpLidar.GetDeviceInfo(out di))
+                {
+                    if (di.Model == 0 && di.hardware == 0)
+                    {
+                        Trace.WriteLine(string.Format("Lidar Model({0}, {1}), Firmware({2}, {3})", di.Model, di.hardware,
+                            di.FirmwareMajor, di.FirmwareMinor));
+                        RpLidar.StartScan();
+                        return;
+                    }
+                }
+                else
+                {
+                    Trace.WriteLine("Unable to get device info from RP LIDAR, device reset", "warn");
+                    RpLidar.Reset();
+                    Thread.Sleep(500);
+                }
+            }
+
+            Trace.WriteLine("Start Lidar failed 5 (re)tries", "error");
+        }
+
+        void LidarNewScanSet(ScanPoint[] scanset)
+        {
+            Dispatcher.InvokeAsync(() =>
+            {
+                // provide an immutable sorted list for LIDARCanvas and others to use
+            LidarCanvas.Scans = new List<ScanPoint>(scanset.Length);
+
+            foreach (ScanPoint p in scanset)
+                if (p != null)
+                    LidarCanvas.Scans.Add(new ScanPoint
+                    {
+                        Angle = p.Angle * Math.PI / 180.0,
+                        Distance = p.Distance,
+                        Quality = p.Quality
+                    });
+
+            List<double> derivatives = Slam.ComputeScanDerivatives(LidarCanvas.Scans);
+            LidarCanvas.Landmarks = Slam.FindLandmarksFromDerivatives(LidarCanvas.Scans, derivatives);
+
+                LidarCanvas.InvalidateVisual();
+            });
         }
     }
 }

@@ -180,6 +180,10 @@
       <Project>{99ee9596-5c66-41e7-b1a4-c8a53061ec90}</Project>
       <Name>RpLidarLib</Name>
     </ProjectReference>
+    <ProjectReference Include="..\SlamLib\RnSlamLib.csproj">
+      <Project>{7ed2c620-b656-49f9-88f2-23521a12c041}</Project>
+      <Name>RnSlamLib</Name>
+    </ProjectReference>
     <ProjectReference Include="..\winRobot\winRobot.csproj">
       <Project>{b674c060-3809-4b4c-9e94-76a05c91b2cc}</Project>
       <Name>winRobot</Name>
@@ -191,6 +195,9 @@
   </ItemGroup>
   <ItemGroup>
     <Resource Include="Images\Chat - Next-03.png" />
+  </ItemGroup>
+  <ItemGroup>
+    <Resource Include="Images\Radar New.png" />
   </ItemGroup>
   <Import Project="$(MSBuildToolsPath)\Microsoft.CSharp.targets" />
   <!-- To modify your build process, add your task inside one of the targets below and uncomment it. 

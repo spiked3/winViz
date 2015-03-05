@@ -7,13 +7,14 @@
              mc:Ignorable="d" 
              d:DesignHeight="300" d:DesignWidth="300">
     <Grid>
-        <ll:LidarCanvas LandmarkBrush="Green" LandmarkSize="8" ClipToBounds="True" Scans="{Binding Scans}" Landmarks="{Binding Landmarks}" 
-                                Background="White" >
+        <ll:LidarCanvas x:Name="LidarCanvas" LandmarkBrush="Green" LandmarkSize="6" ClipToBounds="True" Background="White"
+                        Scans="{Binding Scans}" Landmarks="{Binding Landmarks}" ScanBrush="#FF89EAFF" 
+                                 >
             <ll:LidarCanvas.AxisPen>
-                <Pen Brush="#FF646464"/>
+                <Pen Brush="#FFCBCBCB"/>
             </ll:LidarCanvas.AxisPen>
             <ll:LidarCanvas.ScanPen>
-                <Pen Brush="#FFD0F6FF"/>
+                <Pen Brush="#FF3D72FD"/>
             </ll:LidarCanvas.ScanPen>
         </ll:LidarCanvas>
 

@@ -15,7 +15,7 @@
                 <RibbonButton Label="U-Turn"  LargeImageSource="Images/U-turn.png" />
 
 
-                    <TextBlock Text="Speed" Grid.Row="0" Grid.Column="0" />
+                    <!--<TextBlock Text="Speed" Grid.Row="0" Grid.Column="0" />
                     <TextBlock Text="{Binding Speed,FallbackValue=50}" Grid.Row="0" Grid.Column="1" HorizontalAlignment="Center" />
                     <Slider Minimum="-100" Maximum="100" Value="{Binding Speed}" SmallChange="5" LargeChange="20"
                                 TickFrequency="10" IsSnapToTickEnabled="True" TickPlacement="TopLeft"
@@ -25,7 +25,7 @@
                     <TextBlock Text="{Binding Spare,FallbackValue=50}" Grid.Row="2" Grid.Column="1" HorizontalAlignment="Center" />
                     <Slider Minimum="0" Maximum="100" Value="{Binding DrawScale}" SmallChange="5" LargeChange="20"
                                 TickFrequency="10" IsSnapToTickEnabled="True" TickPlacement="TopLeft"
-                                Grid.Row="3" Grid.ColumnSpan="2" />
+                                Grid.Row="3" Grid.ColumnSpan="2" />-->
         </WrapPanel>
     </Grid>
 </UserControl>

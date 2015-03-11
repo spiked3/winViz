@@ -190,10 +190,11 @@ namespace spiked3.winViz
 
         void MiniUiAdd(UIElement u, string title, Brush bg)
         {
-            var sp = new StackPanel();
-            sp.Children.Add(new TextBlock { Text = title, Background = bg, Foreground = Brushes.White, Padding = new Thickness(1) });
-            sp.Children.Add(u);
-            MiniUis.Add(sp);
+            var ex = new Expander { ExpandDirection = ExpandDirection.Down, Header = title, Background = bg, Foreground = Brushes.White, Padding = new Thickness(4) };
+            var gr = new Grid { HorizontalAlignment = System.Windows.HorizontalAlignment.Center };
+            gr.Children.Add(u);
+            ex.Content = gr;
+            MiniUis.Add(ex);
             //MiniUis.Add(new Separator { Width = 260, Margin = new Thickness(12) });
         }
 
@@ -243,12 +244,13 @@ namespace spiked3.winViz
                 RobotX = x;
                 RobotY = y;
                 RobotZ = z;
-                RobotH = (int)h_radians.inDegrees();
 
                 while (RobotH >= 360)
                     RobotH -= 360;
                 while (RobotH < 0)
                     RobotH += 360;
+
+                RobotH = (int)h_radians.inDegrees();
 
                 // north is up, y+ is up
                 var g = new Transform3DGroup();
@@ -338,7 +340,7 @@ namespace spiked3.winViz
                 if (MiniUis[i] is RobotPanel)
                     MiniUis.RemoveAt(i);
 
-            MiniUiAdd(new RobotPanel { Width = 300, ToolTip = filename }, "Robot1", Brushes.Blue);
+            MiniUiAdd(new RobotPanel { Width = 320, ToolTip = filename }, "Robot1", Brushes.Blue);
 
             foreach (var r in RobotDictionary.Values)
                 view1.Children.Remove(r);
@@ -489,9 +491,12 @@ namespace spiked3.winViz
                         });
 
                 List<double> derivatives = Slam.ComputeScanDerivatives(LidarCanvas.Scans);
+                
                 LidarCanvas.Landmarks = Slam.FindLandmarksFromDerivatives(LidarCanvas.Scans, derivatives);
+                landmarks1.Landmarks = Slam.FindLandmarksFromDerivatives(LidarCanvas.Scans, derivatives);
 
                 LidarCanvas.InvalidateVisual();
+                //Landmarks1.UpdateModels();
             });
         }
 

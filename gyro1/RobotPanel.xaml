@@ -1,21 +1,67 @@
 ﻿<UserControl x:Class="spiked3.winViz.RobotPanel"
              xmlns="http://schemas.microsoft.com/winfx/2006/xaml/presentation"
              xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
-             xmlns:mc="http://schemas.openxmlformats.org/markup-compatibility/2006" 
-             xmlns:d="http://schemas.microsoft.com/expression/blend/2008" 
-             mc:Ignorable="d" 
-             d:DesignHeight="300" d:DesignWidth="300">
+             xmlns:mc="http://schemas.openxmlformats.org/markup-compatibility/2006"
+             xmlns:d="http://schemas.microsoft.com/expression/blend/2008"
+             mc:Ignorable="d"
+             d:DesignHeight="300" d:DesignWidth="320">
     <Grid>
         <WrapPanel >
-                <RibbonButton Label="Forward"  LargeImageSource="Images/Road-Forward.png"/>
-                <RibbonButton Label="Stop" LargeImageSource="Images/Stop Media.png" />
-                <RibbonButton Label="Left"  LargeImageSource="Images/Road-Left.png" />
-                <RibbonButton Label="Right"  LargeImageSource="Images/Road-Right.png" />
-                <RibbonButton Label="Back"  LargeImageSource="Images/Road-Backward.png" />
-                <RibbonButton Label="U-Turn"  LargeImageSource="Images/U-turn.png" />
+            <WrapPanel.Resources>
+                <Style TargetType="Button" >
+                    <Setter Property="Width" Value="56" />
+                    <Setter Property="Margin" Value="1,1,1,1" />
+                </Style>
+                <Style TargetType="Image" >
+                    <Setter Property="Width" Value="32" />
+                    <Setter Property="Height" Value="32" />
+                    <Setter Property="Stretch" Value="Uniform" />
+                </Style>
+            </WrapPanel.Resources>
+            <Button>
+                <StackPanel>
+                    <Image Source="Images/Road-Forward.png" />
+                    <Label Content="Forward" />
+                </StackPanel>
+            </Button>
 
+            <Button >
+                <StackPanel>
+                    <Image Source="Images/Stop Media.png" />
+                    <Label Content="Stop" />
+                </StackPanel>
 
-                    <!--<TextBlock Text="Speed" Grid.Row="0" Grid.Column="0" />
+            </Button>
+            <Button >
+                <StackPanel>
+                    <Image Source="Images/Road-Left.png" />
+                    <Label Content="Left" />
+                </StackPanel>
+
+            </Button>
+            <Button >
+                <StackPanel>
+                    <Image Source="Images/Road-Right.png" />
+                    <Label Content="Right" />
+                </StackPanel>
+
+            </Button>
+            <Button >
+                <StackPanel>
+                    <Image Source="Images/Road-Backward.png" />
+                    <Label Content="Back" />
+                </StackPanel>
+
+            </Button>
+            <Button >
+                <StackPanel>
+                    <Image Source="Images/U-turn.png" />
+                    <Label Content="U-Turn" />
+                </StackPanel>
+
+            </Button>
+
+            <!--<TextBlock Text="Speed" Grid.Row="0" Grid.Column="0" />
                     <TextBlock Text="{Binding Speed,FallbackValue=50}" Grid.Row="0" Grid.Column="1" HorizontalAlignment="Center" />
                     <Slider Minimum="-100" Maximum="100" Value="{Binding Speed}" SmallChange="5" LargeChange="20"
                                 TickFrequency="10" IsSnapToTickEnabled="True" TickPlacement="TopLeft"

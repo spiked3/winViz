@@ -119,7 +119,7 @@ long LastPoseTime = time1[T1];
 
 void CalcPoseWithGyro()
 {
-	float a = 5 / 0;	// not implemented
+	stopAllTasks();	// not implemented
 
 	// milli-degree/second is what the gyro uses
 	// time1 uses milliseconds

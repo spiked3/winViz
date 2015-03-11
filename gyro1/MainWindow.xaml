@@ -27,7 +27,7 @@
     </RibbonWindow.Resources>
 
     <DockPanel LastChildFill="True">
-        
+
         <Ribbon DockPanel.Dock="Top">
             <Ribbon.ApplicationMenu>
                 <!--  style me -->
@@ -93,7 +93,14 @@
                     </TextBlock.LayoutTransform>
                 </TextBlock>
             </Expander.Header>
-                <ListBox ItemsSource="{Binding MiniUis}" Background="{x:Null}" Margin="0,4,0,4" BorderBrush="Transparent" />
+            <ListBox ItemsSource="{Binding MiniUis}" Background="{x:Null}" Margin="0,4,0,4" BorderBrush="Transparent" >
+                <ListBox.Resources>
+                    <Style TargetType="Expander" >
+                        <Setter Property="Width" Value="340" />
+                    </Style>
+                </ListBox.Resources>
+
+            </ListBox>
         </Expander>
 
         <Expander x:Name="objectView1" ExpandDirection="Right" Background="White" DockPanel.Dock="Left">
@@ -121,15 +128,20 @@
                 <RowDefinition Height="2*" />
             </Grid.RowDefinitions>
 
-            <Grid Background="{StaticResource worldBg}">
+            <Grid  Background="{StaticResource worldBg}" >
+               
+               
 
                 <helix:HelixViewport3D x:Name="view1" Camera="{helix:PerspectiveCamera 20, -50, 20}" ZoomExtentsWhenLoaded="False"
-                                       ModelUpDirection="0,0,1" ShowCoordinateSystem="True" ShowViewCube="False">
+                                       ModelUpDirection="0,0,1" ShowCoordinateSystem="True" >
                     <helix:SunLight />
                     <!--<helix:FileModelVisual3D x:Name="robot1" />-->
                     <!--<helix:MeshGeometryVisual3D  x:Name="robot1" Material="{helix:Material Red}" />-->
                     <!--<helix:CubeVisual3D  x:Name="robot1" Center="0,0,0" Material="{helix:Material Red}" />-->
                     <!--<helix:CombinedManipulator TargetTransform="{Binding Transform, ElementName=robot1}" />-->
+                    <local:LandmarksVisual3D x:Name="landmarks1" Landmarks="{Binding Landmarks}" />
+                    <!--<helix:PipeVisual3D Diameter="1" Point1="2,2,0" Point2="2,2,2" Fill="Green"  />-->
+                    <helix:SphereVisual3D Radius=".5" Fill="White" />
                     <helix:GridLinesVisual3D Length="100" Width="100" MajorDistance="10" MinorDistance="5" x:Name="grid1" />
                 </helix:HelixViewport3D>
 
@@ -174,9 +186,9 @@
 
             <GridSplitter Grid.Row="1" VerticalAlignment="Stretch" ResizeDirection="Rows" HorizontalAlignment="Stretch" Grid.ColumnSpan="2" BorderBrush="{DynamicResource {x:Static SystemColors.ActiveBorderBrushKey}}" BorderThickness="4" />
 
-            <TextBlock Text="Spiked3.com" Foreground="Orange" FontSize="32" Margin="64,12,0,0" HorizontalAlignment="Left" VerticalAlignment="Top" />
+            <TextBlock Text="Spiked3.com" Foreground="Orange" FontSize="32" Margin="6,12,0,0" HorizontalAlignment="Left" VerticalAlignment="Top" />
 
         </Grid>
-        
+
     </DockPanel>
 </RibbonWindow>

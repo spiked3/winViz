@@ -49,6 +49,8 @@ namespace spiked3.winViz
 {
     public partial class MainWindow : RibbonWindow
     {
+        Dictionary<string, string> MachineToLidarPort = new Dictionary<string, string>();
+
         private Vector3D xAxis = new Vector3D(1, 0, 0);
         private Vector3D yAxis = new Vector3D(0, 1, 0);
         private Vector3D zAxis = new Vector3D(0, 0, 1);
@@ -148,6 +150,9 @@ namespace spiked3.winViz
         public MainWindow()
         {
             InitializeComponent();
+
+            MachineToLidarPort.Add("ws1", "com6");
+            MachineToLidarPort.Add("msi2", "com3");
 
             Width = Settings.Default.Width;
             Height = Settings.Default.Height;
@@ -437,7 +442,7 @@ namespace spiked3.winViz
             Slam = new Slam();
             try
             {
-                RpLidar = new RpLidarDriver("com6");
+                RpLidar = new RpLidarDriver(MachineToLidarPort[System.Environment.MachineName]);
             }
             catch (Exception ex)
             {
@@ -491,7 +496,7 @@ namespace spiked3.winViz
                         });
 
                 List<double> derivatives = Slam.ComputeScanDerivatives(LidarCanvas.Scans);
-                
+
                 LidarCanvas.Landmarks = Slam.FindLandmarksFromDerivatives(LidarCanvas.Scans, derivatives);
                 landmarks1.Landmarks = Slam.FindLandmarksFromDerivatives(LidarCanvas.Scans, derivatives);
 

@@ -49,103 +49,50 @@ namespace spiked3.winViz
 {
     public partial class MainWindow : RibbonWindow
     {
-        Dictionary<string, string> MachineToLidarPort = new Dictionary<string, string>();
-
-        private Vector3D xAxis = new Vector3D(1, 0, 0);
-        private Vector3D yAxis = new Vector3D(0, 1, 0);
-        private Vector3D zAxis = new Vector3D(0, 0, 1);
-
-        public ObservableCollection<object> ViewObjects { get { return _ViewObjects; } }
-        ObservableCollection<object> _ViewObjects = new ObservableCollection<object>();
-
-        public Brush RobotBrush
-        {
-            get { return (Brush)GetValue(RobotBrushProperty); }
-            set { SetValue(RobotBrushProperty, value); }
-        }
+        public static readonly DependencyProperty MiniUisProperty =
+            DependencyProperty.Register("MiniUis", typeof(ObservableCollection<UIElement>), typeof(MainWindow), new PropertyMetadata(new ObservableCollection<UIElement>()));
 
         public static readonly DependencyProperty RobotBrushProperty =
             DependencyProperty.Register("RobotBrush", typeof(Brush), typeof(MainWindow), new PropertyMetadata(Brushes.Gray));
 
-        public int Speed
-        {
-            get { return (int)GetValue(SpeedProperty); }
-            set { SetValue(SpeedProperty, value); }
-        }
-
-        public static readonly DependencyProperty SpeedProperty =
-            DependencyProperty.Register("Speed", typeof(int), typeof(MainWindow), new PropertyMetadata(50));
-
-        public string State
-        {
-            get { return (string)GetValue(StateProperty); }
-            set { SetValue(StateProperty, value); }
-        }
-
-        public static readonly DependencyProperty StateProperty =
-            DependencyProperty.Register("State", typeof(string), typeof(MainWindow), new PropertyMetadata("Initial State"));
-
-        public double RobotX
-        {
-            get { return (double)GetValue(RobotXProperty); }
-            set { SetValue(RobotXProperty, value); }
-        }
+        public static readonly DependencyProperty RobotHProperty =
+            DependencyProperty.Register("RobotH", typeof(int), typeof(MainWindow), new PropertyMetadata(0));
 
         public static readonly DependencyProperty RobotXProperty =
             DependencyProperty.Register("RobotX", typeof(double), typeof(MainWindow), new PropertyMetadata(0.0));
 
-        public double RobotY
-        {
-            get { return (double)GetValue(RobotYProperty); }
-            set { SetValue(RobotYProperty, value); }
-        }
-
         public static readonly DependencyProperty RobotYProperty =
             DependencyProperty.Register("RobotY", typeof(double), typeof(MainWindow), new PropertyMetadata(0.0));
-
-        public double RobotZ
-        {
-            get { return (double)GetValue(RobotZProperty); }
-            set { SetValue(RobotZProperty, value); }
-        }
 
         public static readonly DependencyProperty RobotZProperty =
             DependencyProperty.Register("RobotZ", typeof(double), typeof(MainWindow), new PropertyMetadata(0.0));
 
-        public int RobotH
-        {
-            get { return (int)GetValue(RobotHProperty); }
-            set { SetValue(RobotHProperty, value); }
-        }
+        public static readonly DependencyProperty SpeedProperty =
+            DependencyProperty.Register("Speed", typeof(int), typeof(MainWindow), new PropertyMetadata(50));
 
-        public static readonly DependencyProperty RobotHProperty =
-            DependencyProperty.Register("RobotH", typeof(int), typeof(MainWindow), new PropertyMetadata(0));
-
-        public string StatusText
-        {
-            get { return (string)GetValue(StatusTextProperty); }
-            set { SetValue(StatusTextProperty, value); }
-        }
+        public static readonly DependencyProperty StateProperty =
+            DependencyProperty.Register("State", typeof(string), typeof(MainWindow), new PropertyMetadata("Initial State"));
 
         public static readonly DependencyProperty StatusTextProperty =
             DependencyProperty.Register("StatusText", typeof(string), typeof(MainWindow), new PropertyMetadata("StatusText"));
 
-
-        public ObservableCollection<UIElement> MiniUis
-        {
-            get { return (ObservableCollection<UIElement>)GetValue(MiniUisProperty); }
-            set { SetValue(MiniUisProperty, value); }
-        }
-
-        public static readonly DependencyProperty MiniUisProperty =
-            DependencyProperty.Register("MiniUis", typeof(ObservableCollection<UIElement>), typeof(MainWindow), new PropertyMetadata(new ObservableCollection<UIElement>()));
-
         private const string Broker = "127.0.0.1";
-        private MqttClient Mqtt;
-
+        private const double r = 10.0;
+        ObservableCollection<object> _ViewObjects = new ObservableCollection<object>();
+        private bool firstStep = true;
         string LastRobot;
+        LidarCanvas LidarCanvas;
+        Dictionary<string, string> MachineToLidarPort = new Dictionary<string, string>();
 
+        private MqttClient Mqtt;
         Dictionary<string, Visual3D> RobotDictionary = new Dictionary<string, Visual3D>();
+        RpLidarDriver RpLidar;
+        Slam Slam;
+        private int StartAt = 0, Step = 4;
+        private double startX = -10.0, startY = 0.0;
+        private Vector3D xAxis = new Vector3D(1, 0, 0);
+        private Vector3D yAxis = new Vector3D(0, 1, 0);
+        private Vector3D zAxis = new Vector3D(0, 0, 1);
 
         public MainWindow()
         {
@@ -169,161 +116,74 @@ namespace spiked3.winViz
                 LoadRobot(Settings.Default.LastRobot);
         }
 
-        private void MenuExit_Click(object sender, RoutedEventArgs e)
+        public ObservableCollection<UIElement> MiniUis
         {
-            Close();
+            get { return (ObservableCollection<UIElement>)GetValue(MiniUisProperty); }
+            set { SetValue(MiniUisProperty, value); }
         }
 
-        private void Window_Loaded(object sender, RoutedEventArgs e)
+        public Brush RobotBrush
         {
-            spiked3.Console.MessageLevel = 1;
-            Trace.WriteLine("winViz / Gyro Fusion 0.2 © 2015 spiked3.com", "+");
-            State = "MQTT Connecting ...";
-            Mqtt = new MqttClient(Broker);
-            Mqtt.MqttMsgPublishReceived += Mqtt_MqttMsgPublishReceived;
-            Mqtt.Connect("pc");
-            Mqtt.Subscribe(new[] { "Pilot/#" }, new[] { MqttMsgBase.QOS_LEVEL_EXACTLY_ONCE });
-            State = "MQTT Connected";
-            Trace.WriteLine("MQTT Connected", "1");
-
-            ViewObjectsAdd(Mqtt);
-
-            var u = new LidarPanel { Width = 320, Height = 300, Margin = new Thickness(0, 4, 0, 4) };
-            LidarCanvas = u.LidarCanvas;
-            MiniUiAdd(u, "LIDAR", Brushes.Red);
+            get { return (Brush)GetValue(RobotBrushProperty); }
+            set { SetValue(RobotBrushProperty, value); }
         }
 
-        void MiniUiAdd(UIElement u, string title, Brush bg)
+        public int RobotH
         {
-            var ex = new Expander { ExpandDirection = ExpandDirection.Down, Header = title, Background = bg, Foreground = Brushes.White, Padding = new Thickness(4) };
-            var gr = new Grid { HorizontalAlignment = System.Windows.HorizontalAlignment.Center };
-            gr.Children.Add(u);
-            ex.Content = gr;
-            MiniUis.Add(ex);
-            //MiniUis.Add(new Separator { Width = 260, Margin = new Thickness(12) });
+            get { return (int)GetValue(RobotHProperty); }
+            set { SetValue(RobotHProperty, value); }
         }
 
-        private class RobotPose
+        public double RobotX
         {
-            public float X { get; set; }
-
-            public float Y { get; set; }
-
-            public float H { get; set; }
+            get { return (double)GetValue(RobotXProperty); }
+            set { SetValue(RobotXProperty, value); }
         }
 
-        private void Mqtt_MqttMsgPublishReceived(object sender, MqttMsgPublishEventArgs e)
+        public double RobotY
         {
-            Trace.WriteLine(string.Format("Mqtt_MqttMsgPublishReceived: {0}/{1}", e.Topic, System.Text.Encoding.UTF8.GetString(e.Message)), "3");
-            if (e.DupFlag)
-            {
-                return; // drop duplicates
-            }
-
-            switch (e.Topic)
-            {
-                case "Pilot/Pose":
-                    dynamic pose = JsonConvert.DeserializeObject(System.Text.Encoding.UTF8.GetString(e.Message));
-                    Dispatcher.InvokeAsync(() =>
-                    {
-                        NewRobotPose("Pilot", (double)pose.X, (double)pose.Y, (double)0, (double)pose.H);
-                    }, DispatcherPriority.Render);
-                    break;
-
-                case "Pilot/Log":
-                    string t = System.Text.Encoding.UTF8.GetString(e.Message);
-                    t = t.TrimStart('{').TrimEnd('}');
-                    Trace.WriteLine(t);
-                    break;
-
-                default:
-                    break;
-            }
+            get { return (double)GetValue(RobotYProperty); }
+            set { SetValue(RobotYProperty, value); }
         }
 
-        // +++ pose display should be via a billboard near robot
-        private void NewRobotPose(string robot, double x, double y, double z, double h_radians)
+        public double RobotZ
         {
-            if (RobotDictionary.ContainsKey(robot))
-            {
-                RobotX = x;
-                RobotY = y;
-                RobotZ = z;
-
-                while (RobotH >= 360)
-                    RobotH -= 360;
-                while (RobotH < 0)
-                    RobotH += 360;
-
-                RobotH = (int)h_radians.inDegrees();
-
-                // north is up, y+ is up
-                var g = new Transform3DGroup();
-                g.Children.Add(new RotateTransform3D(new AxisAngleRotation3D(zAxis, 90 - RobotH)));
-                g.Children.Add(new TranslateTransform3D(x, y, z));
-
-                RobotDictionary[robot].Transform = g;
-            }
+            get { return (double)GetValue(RobotZProperty); }
+            set { SetValue(RobotZProperty, value); }
         }
 
-        private int StartAt = 0, Step = 4;
-        private double startX = -10.0, startY = 0.0;
-        private const double r = 10.0;
-        private bool firstStep = true;
-
-        private void Step_Click(object sender, RoutedEventArgs e)
+        public int Speed
         {
-            if (firstStep)
-            {
-                firstStep = false;
-                RobotX = startX;
-                RobotY = startY;
-                RobotH = StartAt;
-                NewRobotPose("Pilot", RobotX, RobotY, 0, (RobotH).inRadians());
-            }
-            else
-            {
-                RobotH += Step;
-                NewRobotPose("Pilot", -Math.Cos(RobotH.inRadians()) * r, Math.Sin(RobotH.inRadians()) * r, 0, RobotH.inRadians());
-            }
+            get { return (int)GetValue(SpeedProperty); }
+            set { SetValue(SpeedProperty, value); }
         }
 
-        private void TestG_Click(object sender, RoutedEventArgs e)
+        public string State
         {
-            Trace.WriteLine("TestG_Click", "1");
-
-            int count = ((StartAt + 360) / Step) + 1;
-
-            new Thread(new ThreadStart(() =>
-            {
-                firstStep = true;
-                for (int i = 0; i < count; i++)
-                {
-                    Dispatcher.InvokeAsync(() =>
-                    {
-                        Step_Click(this, null);
-                    });
-                    System.Threading.Thread.Sleep(1000 / 30);
-                }
-            })).Start();
+            get { return (string)GetValue(StateProperty); }
+            set { SetValue(StateProperty, value); }
         }
 
-        private void Window_Closing(object sender, System.ComponentModel.CancelEventArgs e)
+        public string StatusText
         {
-            if (Mqtt != null && Mqtt.IsConnected)
-                Mqtt.Disconnect();
-
-            Settings.Default.Width = (float)((Window)sender).Width;
-            Settings.Default.Height = (float)((Window)sender).Height;
-            Settings.Default.Top = (float)((Window)sender).Top;
-            Settings.Default.Left = (float)((Window)sender).Left;
-            Settings.Default.LastRobot = LastRobot;
-            Settings.Default.Save();
+            get { return (string)GetValue(StatusTextProperty); }
+            set { SetValue(StatusTextProperty, value); }
         }
 
-        private void TestP_Click(object sender, RoutedEventArgs e)
+        public ObservableCollection<object> ViewObjects { get { return _ViewObjects; } }
+        public void ViewObjectsAdd(object o)
         {
-            Trace.WriteLine("TestP_Click (empty)", "1");
+            ViewObjects.Add(o);
+        }
+
+        public void ViewObjectsRemove(object o)
+        {
+            ViewObjects.Remove(o);
+        }
+
+        private void ConsoleTest_Click(object sender, RoutedEventArgs e)
+        {
+            console1.Test();
         }
 
         private void Exit_Click(object sender, RoutedEventArgs e)
@@ -331,9 +191,77 @@ namespace spiked3.winViz
             Close();
         }
 
-        private void ConsoleTest_Click(object sender, RoutedEventArgs e)
+        void InitLIDAR()
         {
-            console1.Test();
+            Slam = new Slam();
+            try
+            {
+                RpLidar = new RpLidarDriver(MachineToLidarPort[System.Environment.MachineName]);
+            }
+            catch (Exception ex)
+            {
+                Trace.WriteLine("Exception opening LIDAR COM port, LIDAR not available.", "error");
+                Trace.WriteLine(ex.Message, "1");
+                return;
+            }
+
+            RpLidar.NewScanSet += LidarNewScanSet;
+
+            // retry until valid device info
+            int tries = 0;
+            while (++tries < 5)
+            {
+                LidarDevInfoResponse di;
+                if (RpLidar.GetDeviceInfo(out di))
+                {
+                    if (di.Model == 0 && di.hardware == 0)
+                    {
+                        Trace.WriteLine(string.Format("Lidar Model({0}, {1}), Firmware({2}, {3})", di.Model, di.hardware,
+                            di.FirmwareMajor, di.FirmwareMinor));
+                        RpLidar.StartScan();
+                        return;
+                    }
+                }
+                else
+                {
+                    Trace.WriteLine("Unable to get device info from RP LIDAR, device reset", "warn");
+                    RpLidar.Reset();
+                    Thread.Sleep(500);
+                }
+            }
+
+            Trace.WriteLine("Start Lidar failed 5 (re)tries", "error");
+        }
+
+        private void LIDAR_Click(object sender, RoutedEventArgs e)
+        {
+            InitLIDAR();
+        }
+
+        void LidarNewScanSet(ScanPoint[] scanset)
+        {
+            Dispatcher.InvokeAsync(() =>
+            {
+                // provide an immutable sorted list for LIDARCanvas and others to use
+                LidarCanvas.Scans = new List<ScanPoint>(scanset.Length);
+
+                foreach (ScanPoint p in scanset)
+                    if (p != null)
+                        LidarCanvas.Scans.Add(new ScanPoint
+                        {
+                            Angle = p.Angle * Math.PI / 180.0,
+                            Distance = p.Distance,
+                            Quality = p.Quality
+                        });
+
+                List<double> derivatives = Slam.ComputeScanDerivatives(LidarCanvas.Scans);
+
+                LidarCanvas.Landmarks = Slam.FindLandmarksFromDerivatives(LidarCanvas.Scans, derivatives);
+                landmarks1.Landmarks = Slam.FindLandmarksFromDerivatives(LidarCanvas.Scans, derivatives);
+
+                LidarCanvas.InvalidateVisual();
+
+            });
         }
 
         void LoadRobot(string filename)
@@ -386,10 +314,19 @@ namespace spiked3.winViz
             LastRobot = filename;
         }
 
-        private void Reset_Click(object sender, RoutedEventArgs e)
+        private void MenuExit_Click(object sender, RoutedEventArgs e)
         {
-            NewRobotPose("Pilot", 0, 0, 0, 0);
-            firstStep = true;
+            Close();
+        }
+
+        void MiniUiAdd(UIElement u, string title, Brush bg)
+        {
+            var ex = new Expander { ExpandDirection = ExpandDirection.Down, Header = title, Background = bg, Foreground = Brushes.White, Padding = new Thickness(4) };
+            var gr = new Grid { HorizontalAlignment = System.Windows.HorizontalAlignment.Center };
+            gr.Children.Add(u);
+            ex.Content = gr;
+            MiniUis.Add(ex);
+            //MiniUis.Add(new Separator { Width = 260, Margin = new Thickness(12) });
         }
 
         private void Model_Click(object sender, RoutedEventArgs e)
@@ -398,6 +335,35 @@ namespace spiked3.winViz
             if (d.ShowDialog() ?? false)
             {
                 LoadRobot(d.FileName);
+            }
+        }
+
+        private void Mqtt_MqttMsgPublishReceived(object sender, MqttMsgPublishEventArgs e)
+        {
+            Trace.WriteLine(string.Format("Mqtt_MqttMsgPublishReceived: {0}/{1}", e.Topic, System.Text.Encoding.UTF8.GetString(e.Message)), "3");
+            if (e.DupFlag)
+            {
+                return; // drop duplicates
+            }
+
+            switch (e.Topic)
+            {
+                case "robot1/Pose":
+                    dynamic pose = JsonConvert.DeserializeObject(System.Text.Encoding.UTF8.GetString(e.Message));
+                    Dispatcher.InvokeAsync(() =>
+                    {
+                        NewRobotPose("Pilot", (double)pose.X / 100.0, (double)pose.Y / 100.0, (double)0, (double)pose.H);
+                    }, DispatcherPriority.Render);
+                    break;
+
+                case "robot1/Log":
+                    string t = System.Text.Encoding.UTF8.GetString(e.Message);
+                    t = t.TrimStart('{').TrimEnd('}');
+                    Trace.WriteLine(t);
+                    break;
+
+                default:
+                    break;
             }
         }
 
@@ -410,113 +376,118 @@ namespace spiked3.winViz
             }).Start();
         }
 
-        private void LIDAR_Click(object sender, RoutedEventArgs e)
+        // +++ pose display should be via a billboard near robot
+        private void NewRobotPose(string robot, double x, double y, double z, double h_degrees)
         {
-            InitLIDAR();
+            if (RobotDictionary.ContainsKey(robot))
+            {
+                RobotX = x;
+                RobotY = y;
+                RobotZ = z;
+
+                RobotH = (int)h_degrees;
+
+                while (RobotH >= 360)
+                    RobotH -= 360;
+                while (RobotH < 0)
+                    RobotH += 360;
+
+                // north is up, y+ is up
+                var g = new Transform3DGroup();
+                g.Children.Add(new RotateTransform3D(new AxisAngleRotation3D(zAxis, 90 - RobotH)));
+                g.Children.Add(new TranslateTransform3D(RobotX, RobotY, RobotZ));
+
+                RobotDictionary[robot].Transform = g;
+            }
         }
 
-        RpLidarDriver RpLidar;
-        Slam Slam;
-        LidarCanvas LidarCanvas;
-
-        //public List<ScanPoint> Scans
-        //{
-        //    get { return (List<ScanPoint>)GetValue(ScansProperty); }
-        //    set { SetValue(ScansProperty, value); }
-        //}
-
-        //public static readonly DependencyProperty ScansProperty =
-        //    DependencyProperty.Register("Scans", typeof(List<ScanPoint>), typeof(MainWindow), new PropertyMetadata(new List<Landmark>()));
-
-        //public List<Landmark> Landmarks
-        //{
-        //    get { return (List<Landmark>)GetValue(LandmarksProperty); }
-        //    set { SetValue(LandmarksProperty, value); }
-        //}
-
-        //public static readonly DependencyProperty LandmarksProperty =
-        //    DependencyProperty.Register("Landmarks", typeof(List<Landmark>), typeof(MainWindow), new PropertyMetadata(new List<Landmark>()));
-
-        void InitLIDAR()
+        private void Reset_Click(object sender, RoutedEventArgs e)
         {
-            Slam = new Slam();
-            try
-            {
-                RpLidar = new RpLidarDriver(MachineToLidarPort[System.Environment.MachineName]);
-            }
-            catch (Exception ex)
-            {
-                Trace.WriteLine("Exception opening LIDAR COM port, LIDAR not available.", "error");
-                Trace.WriteLine(ex.Message, "1");
-                return;
-            }
+            NewRobotPose("Pilot", 0, 0, 0, 0);
+            firstStep = true;
+        }
 
-            RpLidar.NewScanSet += LidarNewScanSet;
-
-            // retry until valid device info
-            int tries = 0;
-            while (++tries < 5)
+        private void Step_Click(object sender, RoutedEventArgs e)
+        {
+            if (firstStep)
             {
-                LidarDevInfoResponse di;
-                if (RpLidar.GetDeviceInfo(out di))
+                firstStep = false;
+                RobotX = startX;
+                RobotY = startY;
+                RobotH = StartAt;
+                NewRobotPose("Pilot", RobotX, RobotY, 0, RobotH);
+            }
+            else
+            {
+                RobotH += Step;
+                NewRobotPose("Pilot", -Math.Cos(RobotH.inRadians()) * r, Math.Sin(RobotH.inRadians()) * r, 0, RobotH);
+            }
+        }
+
+        private void TestG_Click(object sender, RoutedEventArgs e)
+        {
+            Trace.WriteLine("TestG_Click", "1");
+
+            int count = ((StartAt + 360) / Step) + 1;
+
+            new Thread(new ThreadStart(() =>
+            {
+                firstStep = true;
+                for (int i = 0; i < count; i++)
                 {
-                    if (di.Model == 0 && di.hardware == 0)
+                    Dispatcher.InvokeAsync(() =>
                     {
-                        Trace.WriteLine(string.Format("Lidar Model({0}, {1}), Firmware({2}, {3})", di.Model, di.hardware,
-                            di.FirmwareMajor, di.FirmwareMinor));
-                        RpLidar.StartScan();
-                        return;
-                    }
+                        Step_Click(this, null);
+                    });
+                    System.Threading.Thread.Sleep(1000 / 30);
                 }
-                else
-                {
-                    Trace.WriteLine("Unable to get device info from RP LIDAR, device reset", "warn");
-                    RpLidar.Reset();
-                    Thread.Sleep(500);
-                }
-            }
-
-            Trace.WriteLine("Start Lidar failed 5 (re)tries", "error");
+            })).Start();
         }
 
-        void LidarNewScanSet(ScanPoint[] scanset)
+        private void TestP_Click(object sender, RoutedEventArgs e)
         {
-            Dispatcher.InvokeAsync(() =>
-            {
-                // provide an immutable sorted list for LIDARCanvas and others to use
-                LidarCanvas.Scans = new List<ScanPoint>(scanset.Length);
-
-                foreach (ScanPoint p in scanset)
-                    if (p != null)
-                        LidarCanvas.Scans.Add(new ScanPoint
-                        {
-                            Angle = p.Angle * Math.PI / 180.0,
-                            Distance = p.Distance,
-                            Quality = p.Quality
-                        });
-
-                List<double> derivatives = Slam.ComputeScanDerivatives(LidarCanvas.Scans);
-
-                LidarCanvas.Landmarks = Slam.FindLandmarksFromDerivatives(LidarCanvas.Scans, derivatives);
-                landmarks1.Landmarks = Slam.FindLandmarksFromDerivatives(LidarCanvas.Scans, derivatives);
-
-                LidarCanvas.InvalidateVisual();
-                //Landmarks1.UpdateModels();
-            });
+            Trace.WriteLine("TestP_Click (empty)", "1");
         }
 
-        public void ViewObjectsAdd(object o)
+        private void Window_Closing(object sender, System.ComponentModel.CancelEventArgs e)
         {
-            ViewObjects.Add(o);
-            //if (CollectionChanged != null)
-            //    CollectionChanged(this, new NotifyCollectionChangedEventArgs(NotifyCollectionChangedAction.Add, o));
+            if (Mqtt != null && Mqtt.IsConnected)
+                Mqtt.Disconnect();
+
+            Settings.Default.Width = (float)((Window)sender).Width;
+            Settings.Default.Height = (float)((Window)sender).Height;
+            Settings.Default.Top = (float)((Window)sender).Top;
+            Settings.Default.Left = (float)((Window)sender).Left;
+            Settings.Default.LastRobot = LastRobot;
+            Settings.Default.Save();
         }
 
-        public void ViewObjectsRemove(object o)
+        private void Window_Loaded(object sender, RoutedEventArgs e)
         {
-            ViewObjects.Remove(o);
-            //if (CollectionChanged != null)
-            //    CollectionChanged(this, new NotifyCollectionChangedEventArgs(NotifyCollectionChangedAction.Remove, o));
+            spiked3.Console.MessageLevel = 1;
+            Trace.WriteLine("winViz / Gyro Fusion 0.2 © 2015 spiked3.com", "+");
+            State = "MQTT Connecting ...";
+            Mqtt = new MqttClient(Broker);
+            Mqtt.MqttMsgPublishReceived += Mqtt_MqttMsgPublishReceived;
+            Mqtt.Connect("pc");
+            Mqtt.Subscribe(new[] { "#" }, new[] { MqttMsgBase.QOS_LEVEL_EXACTLY_ONCE });
+            State = "MQTT Connected";
+            Trace.WriteLine("MQTT Connected", "1");
+
+            ViewObjectsAdd(Mqtt);
+
+            var u = new LidarPanel { Width = 320, Height = 300, Margin = new Thickness(0, 4, 0, 4) };
+            LidarCanvas = u.LidarCanvas;
+            MiniUiAdd(u, "LIDAR", Brushes.Red);
+        }
+
+        private class RobotPose
+        {
+            public float H { get; set; }
+
+            public float X { get; set; }
+
+            public float Y { get; set; }
         }
 
     }

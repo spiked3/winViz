@@ -188,8 +188,7 @@ void CalcPose()
 		return; // insignificant movement, avoid updating
 
 	float delta = (leftTachoChange + rightTachoChange) * ticksToMM / 2.0;
-		tachoMeasured = (leftTachoChange - rightTachoChange) *
-	ticksToMM / WheelBase;
+	tachoMeasured = (leftTachoChange - rightTachoChange) * ticksToMM / WheelBase;
 
 	RobotX += delta * -sin(RobotH + (tachoMeasured / 2.0));
 	RobotY += delta * cos(RobotH + (tachoMeasured / 2.0));

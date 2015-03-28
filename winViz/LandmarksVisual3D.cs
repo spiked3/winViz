@@ -45,19 +45,19 @@ namespace spiked3.winViz
         {
             Material material = MaterialHelper.CreateMaterial(Brushes.Green);
 
-            if (Landmarks == null || Landmarks.Count < 1)
-                Content = new GeometryModel3D(DefaultGeometry, material);
-            else
+            if (Landmarks != null && Landmarks.Count > 1)
             {
                 var group = new Model3DGroup();
                 for (int i = 0; i < Landmarks.Count; i++)
                 {
                     var tg = new Transform3DGroup();
-                    tg.Children.Add(new TranslateTransform3D(Landmarks[i].Position.X/100, Landmarks[i].Position.Y/100, 0));
+                    tg.Children.Add(new TranslateTransform3D(Landmarks[i].Position.X / 100, Landmarks[i].Position.Y / 100, 0));
                     group.Children.Add(new GeometryModel3D(DefaultGeometry, material) { Transform = tg });
                 }
                 Content = group;
             }
+            //else
+            //    Content = new GeometryModel3D(DefaultGeometry, material);
         }
     }
 }

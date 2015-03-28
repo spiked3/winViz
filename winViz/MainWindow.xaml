@@ -64,17 +64,12 @@
                         <Grid.RowDefinitions>
                             <RowDefinition />
                             <RowDefinition />
-                            <RowDefinition />
-                            <RowDefinition />
                         </Grid.RowDefinitions>
 
-                        <CheckBox x:Name="viewOverview" Content="Overview" Grid.ColumnSpan="2" HorizontalAlignment="Center" Margin="12" IsChecked="True" />
-
-                        <TextBlock Text="Spare" Grid.Row="2" Grid.Column="0" />
-                        <TextBlock Text="{Binding Spare,FallbackValue=99.9}" Grid.Row="2" Grid.Column="1" HorizontalAlignment="Center" />
-                        <Slider Minimum=".50" Maximum="1" Value="{Binding FadeFactor}"
-                    SmallChange=".05" LargeChange=".2" TickFrequency=".05"
-                    IsSnapToTickEnabled="True" TickPlacement="TopLeft" Grid.Row="3" Grid.ColumnSpan="2" />
+                        <TextBlock Text="Spare" Grid.Column="0" />
+                        <TextBlock Text="{Binding Spare,FallbackValue=99.9}" Grid.Column="1" HorizontalAlignment="Center" />
+                        <Slider Minimum=".50" Maximum="1" Value="{Binding FadeFactor}" SmallChange=".05" LargeChange=".2" TickFrequency=".05"
+                            IsSnapToTickEnabled="True" TickPlacement="TopLeft" Grid.Row="1" Grid.ColumnSpan="2" />
                     </Grid>
                 </RibbonGroup>
             </RibbonTab>

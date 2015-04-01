@@ -26,6 +26,7 @@ using RnSlamLib;
 
 using HelixToolkit.Wpf;
 using System.Windows.Controls;
+using System.Text;
 
 // done move console test to test group
 // todo WPF bug; expander blocks focus even when not expanded
@@ -75,46 +76,6 @@ namespace spiked3.winViz
 
         public static readonly DependencyProperty StatusTextProperty =
             DependencyProperty.Register("StatusText", typeof(string), typeof(MainWindow), new PropertyMetadata("StatusText"));
-
-        private const string Broker = "127.0.0.1";
-        private const double r = 10.0;
-        ObservableCollection<object> _ViewObjects = new ObservableCollection<object>();
-        private bool firstStep = true;
-        string LastRobot;
-        LidarCanvas LidarCanvas;
-        Dictionary<string, string> MachineToLidarPort = new Dictionary<string, string>();
-
-        private MqttClient Mqtt;
-        Dictionary<string, Visual3D> RobotDictionary = new Dictionary<string, Visual3D>();
-        RpLidarDriver RpLidar;
-        Slam Slam;
-        private int StartAt = 0, Step = 4;
-        private double startX = -10.0, startY = 0.0;
-        private Vector3D xAxis = new Vector3D(1, 0, 0);
-        private Vector3D yAxis = new Vector3D(0, 1, 0);
-        private Vector3D zAxis = new Vector3D(0, 0, 1);
-
-        public MainWindow()
-        {
-            InitializeComponent();
-
-            MachineToLidarPort.Add("ws1", "com6");
-            MachineToLidarPort.Add("msi2", "com3");
-
-            Width = Settings.Default.Width;
-            Height = Settings.Default.Height;
-            Top = Settings.Default.Top;
-            Left = Settings.Default.Left;
-
-            if (Width == 0 || Height == 0)
-            {
-                Width = 640;
-                Height = 480;
-            }
-
-            if (Settings.Default.LastRobot != null && System.IO.File.Exists(Settings.Default.LastRobot))
-                LoadRobot(Settings.Default.LastRobot);
-        }
 
         public ObservableCollection<UIElement> MiniUis
         {
@@ -171,14 +132,66 @@ namespace spiked3.winViz
         }
 
         public ObservableCollection<object> ViewObjects { get { return _ViewObjects; } }
-        public void ViewObjectsAdd(object o)
+
+        //////////////////////////
+
+        private const string Broker = "127.0.0.1";
+        private const double r = 10.0;
+        ObservableCollection<object> _ViewObjects = new ObservableCollection<object>();
+        private bool firstStep = true;
+        string LastRobot;
+        LidarCanvas LidarCanvas;
+        Dictionary<string, string> MachineToLidarPort = new Dictionary<string, string>();
+
+        private MqttClient Mqtt;
+        Dictionary<string, Visual3D> RobotDictionary = new Dictionary<string, Visual3D>();
+        RpLidarDriver RpLidar;
+        Slam Slam;
+        private int StartAt = 0, Step = 4;
+        private double startX = -10.0, startY = 0.0;
+        private Vector3D xAxis = new Vector3D(1, 0, 0);
+        private Vector3D yAxis = new Vector3D(0, 1, 0);
+        private Vector3D zAxis = new Vector3D(0, 0, 1);
+
+        public MainWindow()
         {
-            ViewObjects.Add(o);
+            InitializeComponent();
+
+            MachineToLidarPort.Add("ws1", "com6");
+            MachineToLidarPort.Add("msi2", "com3");
+
+            Width = Settings.Default.Width;
+            Height = Settings.Default.Height;
+            Top = Settings.Default.Top;
+            Left = Settings.Default.Left;
+
+            if (Width == 0 || Height == 0)
+            {
+                Width = 640;
+                Height = 480;
+            }
+
+            if (Settings.Default.LastRobot != null && System.IO.File.Exists(Settings.Default.LastRobot))
+                LoadRobot(Settings.Default.LastRobot);
         }
 
-        public void ViewObjectsRemove(object o)
+        private void Window_Loaded(object sender, RoutedEventArgs e)
         {
-            ViewObjects.Remove(o);
+            spiked3.Console.MessageLevel = 3;
+            Trace.WriteLine("winViz / Gyro Fusion 0.2 © 2015 spiked3.com", "+");
+            State = "MQTT Connecting ...";
+            Mqtt = new MqttClient(Broker);
+            Mqtt.MqttMsgPublishReceived += Mqtt_MqttMsgPublishReceived;
+            Mqtt.Connect("PC");
+            Mqtt.Subscribe(new[] { "robot1/#" }, new[] { MqttMsgBase.QOS_LEVEL_EXACTLY_ONCE });  //+++ per robot
+            State = "MQTT Connected";
+            Trace.WriteLine("MQTT Connected", "1");
+
+            ViewObjects.Add(Mqtt);
+
+            var u = new LidarPanel { Width = 320, Height = 300, Margin = new Thickness(0, 4, 0, 4) };
+            LidarCanvas = u.LidarCanvas;
+            MiniUiAdd(u, "LIDAR", Brushes.Red);
         }
 
         private void ConsoleTest_Click(object sender, RoutedEventArgs e)
@@ -232,11 +245,11 @@ namespace spiked3.winViz
             robot.Model.Transform = xg;
             robot.Model.Geometry = robot.Model.Geometry.Clone();  // permanently apply transform
 
-            RobotDictionary.Add("Pilot", robot);
+            RobotDictionary.Add("robot1", robot);
             view1.Children.Add(robot);
-            ViewObjectsAdd(robot);
+            ViewObjects.Add(robot);
 
-            NewRobotPose("Pilot", 0, 0, 0, 0);
+            NewRobotPose("robot1", 0, 0, 0, 0);
             firstStep = true;
             LastRobot = filename;
         }
@@ -268,39 +281,27 @@ namespace spiked3.winViz
         private void Mqtt_MqttMsgPublishReceived(object sender, MqttMsgPublishEventArgs e)
         {
             Trace.WriteLine(string.Format("Mqtt_MqttMsgPublishReceived: {0}/{1}", e.Topic, System.Text.Encoding.UTF8.GetString(e.Message)), "3");
-            if (e.DupFlag)
-            {
-                return; // drop duplicates
-            }
 
             switch (e.Topic)
             {
-                case "robot1/Pose":
-                    dynamic pose = JsonConvert.DeserializeObject(System.Text.Encoding.UTF8.GetString(e.Message));
-                    Dispatcher.InvokeAsync(() =>
+                case "robot1":
                     {
-                        NewRobotPose("Pilot", (double)pose.X / 100.0, (double)pose.Y / 100.0, (double)0, (double)pose.H);
-                    }, DispatcherPriority.Render);
-                    break;
-
-                case "robot1/Log":
-                    string t = System.Text.Encoding.UTF8.GetString(e.Message);
-                    t = t.TrimStart('{').TrimEnd('}');
-                    Trace.WriteLine(t);
+                        dynamic j = JsonConvert.DeserializeObject(System.Text.Encoding.UTF8.GetString(e.Message));
+                        string type = (string)j["T"];
+                        if (type.Equals("Pose"))
+                            Dispatcher.InvokeAsync(() =>
+                            {
+                                NewRobotPose("robot1", (double)j["X"] / 100.0, (double)j["Y"] / 100.0, 0.0, (double)j["H"]);
+                            }, DispatcherPriority.Render);
+                        else if (type.Equals("Log"))
+                            Trace.WriteLine(System.Text.Encoding.UTF8.GetString(e.Message));
+                    }
                     break;
 
                 default:
+                    //System.Diagnostics.Debugger.Break();
                     break;
             }
-        }
-
-        private void MqttSn_Click(object sender, RoutedEventArgs e)
-        {
-            // +++ never really done - should be in bridge
-            new Thread(() =>
-            {
-                //
-            }).Start();
         }
 
         // +++ pose display should be via a billboard near robot
@@ -319,7 +320,7 @@ namespace spiked3.winViz
                 while (RobotH < 0)
                     RobotH += 360;
 
-                // north is up, y+ is up
+                // north is up (in 2D), y+ is North
                 var g = new Transform3DGroup();
                 g.Children.Add(new RotateTransform3D(new AxisAngleRotation3D(zAxis, 90 - RobotH)));
                 g.Children.Add(new TranslateTransform3D(RobotX, RobotY, RobotZ));
@@ -330,7 +331,8 @@ namespace spiked3.winViz
 
         private void Reset_Click(object sender, RoutedEventArgs e)
         {
-            NewRobotPose("Pilot", 0, 0, 0, 0);
+            NewRobotPose("robot1", 0, 0, 0, 0);
+            Mqtt.Publish("Cmd/robot1", UTF8Encoding.ASCII.GetBytes("{\"T\":\"Cmd\", \"Cmd\":\"Reset\"}"));
             firstStep = true;
         }
 
@@ -342,12 +344,12 @@ namespace spiked3.winViz
                 RobotX = startX;
                 RobotY = startY;
                 RobotH = StartAt;
-                NewRobotPose("Pilot", RobotX, RobotY, 0, RobotH);
+                NewRobotPose("robot1", RobotX, RobotY, 0, RobotH);
             }
             else
             {
                 RobotH += Step;
-                NewRobotPose("Pilot", -Math.Cos(RobotH.inRadians()) * r, Math.Sin(RobotH.inRadians()) * r, 0, RobotH);
+                NewRobotPose("robot1", -Math.Cos(RobotH.inRadians()) * r, Math.Sin(RobotH.inRadians()) * r, 0, RobotH);
             }
         }
 
@@ -371,9 +373,16 @@ namespace spiked3.winViz
             })).Start();
         }
 
-        private void TestP_Click(object sender, RoutedEventArgs e)
+        void Test1_Click(object sender, RoutedEventArgs e)
         {
-            Trace.WriteLine("TestP_Click (empty)", "1");
+            Trace.WriteLine("Test1_Click", "1");
+            Mqtt.Publish("Cmd/robot1", UTF8Encoding.ASCII.GetBytes("{\"T\":\"Cmd\", \"Cmd\":\"Test1\"}"));
+        }
+
+        void Test2_Click(object sender, RoutedEventArgs e)
+        {
+            Trace.WriteLine("Test2_Click", "1");
+            Mqtt.Publish("Cmd/robot1", UTF8Encoding.ASCII.GetBytes("{\"T\":\"Cmd\", \"Cmd\":\"Reset\"}"));
         }
 
         private void Window_Closing(object sender, System.ComponentModel.CancelEventArgs e)
@@ -387,26 +396,6 @@ namespace spiked3.winViz
             Settings.Default.Left = (float)((Window)sender).Left;
             Settings.Default.LastRobot = LastRobot;
             Settings.Default.Save();
-        }
-
-        private void Window_Loaded(object sender, RoutedEventArgs e)
-        {
-            spiked3.Console.MessageLevel = 1;
-            Trace.WriteLine("winViz / Gyro Fusion 0.2 © 2015 spiked3.com", "+");
-            State = "MQTT Connecting ...";
-            Mqtt = new MqttClient(Broker);
-            Mqtt.MqttMsgPublishReceived += Mqtt_MqttMsgPublishReceived;
-            Mqtt.Connect("pc");
-            Mqtt.Subscribe(new[] { "#" }, new[] { MqttMsgBase.QOS_LEVEL_EXACTLY_ONCE });
-            State = "MQTT Connected";
-            Trace.WriteLine("MQTT Connected", "1");
-
-            ViewObjectsAdd(Mqtt);
-
-            var u = new LidarPanel { Width = 320, Height = 300, Margin = new Thickness(0, 4, 0, 4) };
-            LidarCanvas = u.LidarCanvas;
-            MiniUiAdd(u, "LIDAR", Brushes.Red);
-            
         }
 
         #region LIDAR

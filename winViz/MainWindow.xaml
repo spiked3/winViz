@@ -41,8 +41,8 @@
                         <RibbonButton Label="Console" Click="ConsoleTest_Click" LargeImageSource="Images/Monitor-04.png" />
                         <RibbonButton Label="Graphics"  LargeImageSource="Images/Pie-Chart.png" Click="TestG_Click" />
                         <RibbonButton Label="Step"  LargeImageSource="Images/Media-Pause.png" Click="Step_Click" />
-                        <RibbonButton Label="MQTT"  LargeImageSource="Images/Chat - Next-01.png" Click="TestP_Click" />
-                        <RibbonButton Label="MQTT-SN" LargeImageSource="Images/Chat - Next-03.png" Click="MqttSn_Click" />
+                        <RibbonButton Label="Test1"  LargeImageSource="Images/Chat - Next-01.png" Click="Test1_Click" />
+                        <RibbonButton Label="Test2" LargeImageSource="Images/Chat - Next-01.png" Click="Test2_Click" />
                         <RibbonButton Label="LIDAR" Click="LIDAR_Click " LargeImageSource="Images/Radar New.png" />
                     </StackPanel>
                 </RibbonGroup>

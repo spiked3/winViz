@@ -4,3 +4,6 @@
 [submodule "gyro1/Plumbing"]
 	path = gyro1/Plumbing
 	url = //JEFF/Git2/Plumbing.git
+[submodule "winViz/Plumbing"]
+	path = winViz/Plumbing
+	url = //JEFF/Git2/Plumbing.git

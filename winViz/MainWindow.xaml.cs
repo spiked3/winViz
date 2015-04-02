@@ -157,8 +157,8 @@ namespace spiked3.winViz
         {
             InitializeComponent();
 
-            MachineToLidarPort.Add("ws1", "com6");
-            MachineToLidarPort.Add("msi2", "com3");
+            MachineToLidarPort.Add("WS1", "com6");
+            MachineToLidarPort.Add("MSI2", "com3");
 
             Width = Settings.Default.Width;
             Height = Settings.Default.Height;

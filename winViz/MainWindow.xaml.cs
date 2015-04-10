@@ -178,7 +178,7 @@ namespace spiked3.winViz
         private void Window_Loaded(object sender, RoutedEventArgs e)
         {
             spiked3.Console.MessageLevel = 3;
-            Trace.WriteLine("winViz / Gyro Fusion 0.2 © 2015 spiked3.com", "+");
+            Trace.WriteLine("winViz / Gyro Fusion 0.3 © 2015 spiked3.com", "+");
             State = "MQTT Connecting ...";
             Mqtt = new MqttClient(Broker);
             Mqtt.MqttMsgPublishReceived += Mqtt_MqttMsgPublishReceived;
@@ -291,7 +291,7 @@ namespace spiked3.winViz
                         if (type.Equals("Pose"))
                             Dispatcher.InvokeAsync(() =>
                             {
-                                NewRobotPose("robot1", (double)j["X"] / 100.0, (double)j["Y"] / 100.0, 0.0, (double)j["H"]);
+                                NewRobotPose("robot1", (double)j["X"], (double)j["Y"], 0.0, (double)j["H"]);
                             }, DispatcherPriority.Render);
                         else if (type.Equals("Log"))
                             Trace.WriteLine(System.Text.Encoding.UTF8.GetString(e.Message));
@@ -332,7 +332,7 @@ namespace spiked3.winViz
         private void Reset_Click(object sender, RoutedEventArgs e)
         {
             NewRobotPose("robot1", 0, 0, 0, 0);
-            Mqtt.Publish("Cmd/robot1", UTF8Encoding.ASCII.GetBytes("{\"T\":\"Cmd\", \"Cmd\":\"Reset\"}"));
+            Mqtt.Publish("Cmd/robot1", UTF8Encoding.ASCII.GetBytes("{\"T\":\"Cmd\", \"Cmd\":\"Rst\", \"H\": 0}"));
             firstStep = true;
         }
 

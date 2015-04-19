@@ -209,9 +209,9 @@ namespace spiked3.winViz
             // +++ handle multi robots
 
             // for now - delete existing panel if there
-            for (int i = MiniUis.Count - 1; i >= 0; i--)
-                if (MiniUis[i] is RobotPanel)
-                    MiniUis.RemoveAt(i);
+            for (int miniIdx = MiniUis.Count - 1; miniIdx >= 0; miniIdx--)
+                if (MiniUis[miniIdx] is RobotPanel)
+                    MiniUis.RemoveAt(miniIdx);
 
             MiniUiAdd(new RobotPanel { Width = 320, ToolTip = filename }, "Robot1", Brushes.Blue);
 

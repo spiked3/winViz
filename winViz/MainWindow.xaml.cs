@@ -332,7 +332,7 @@ namespace spiked3.winViz
         private void Reset_Click(object sender, RoutedEventArgs e)
         {
             NewRobotPose("robot1", 0, 0, 0, 0);
-            Mqtt.Publish("Cmd/robot1", UTF8Encoding.ASCII.GetBytes("{\"T\":\"Cmd\", \"Cmd\":\"Rst\", \"H\": 0}"));
+            Mqtt.Publish("robot1/Cmd", UTF8Encoding.ASCII.GetBytes(@"{""Cmd"":""Reset""}"));
             firstStep = true;
         }
 
@@ -376,13 +376,13 @@ namespace spiked3.winViz
         void Test1_Click(object sender, RoutedEventArgs e)
         {
             Trace.WriteLine("Test1_Click", "1");
-            Mqtt.Publish("Cmd/robot1", UTF8Encoding.ASCII.GetBytes("{\"T\":\"Cmd\", \"Cmd\":\"Test1\"}"));
+            Mqtt.Publish("Cmd/robot1", UTF8Encoding.ASCII.GetBytes(@"{""T"":""Cmd"", ""Cmd"":""Test1""}"));
         }
 
         void Test2_Click(object sender, RoutedEventArgs e)
         {
             Trace.WriteLine("Test2_Click", "1");
-            Mqtt.Publish("Cmd/robot1", UTF8Encoding.ASCII.GetBytes("{\"T\":\"Cmd\", \"Cmd\":\"Reset\"}"));
+            Mqtt.Publish("Cmd/robot1", UTF8Encoding.ASCII.GetBytes(@"{""T"":""Cmd"", ""Cmd"":""Reset""}"));
         }
 
         private void Window_Closing(object sender, System.ComponentModel.CancelEventArgs e)

@@ -291,7 +291,7 @@ namespace spiked3.winViz
                         if (type.Equals("Pose"))
                             Dispatcher.InvokeAsync(() =>
                             {
-                                NewRobotPose("robot1", (double)j["X"], (double)j["Y"], 0.0, (double)j["H"]);
+                                NewRobotPose("robot1", (double)j["X"] * 100, (double)j["Y"] * 100, 0.0, (double)j["H"]);
                             }, DispatcherPriority.Render);
                         else if (type.Equals("Log"))
                             Trace.WriteLine(System.Text.Encoding.UTF8.GetString(e.Message));

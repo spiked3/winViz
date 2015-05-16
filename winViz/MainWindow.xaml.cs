@@ -28,28 +28,17 @@ using HelixToolkit.Wpf;
 using System.Windows.Controls;
 using System.Text;
 
-// done move console test to test group
-// todo WPF bug; expander blocks focus even when not expanded
-// Frame - eg TF like functions
 // restyle ribbon button system menu to be a glassy S3 button, like dex and 3DS does w/infragistics
-// robot object as object
+//  robot object as object
 //  robot ribbon menu group should a tab created as a result of adding the robot
-// robot simulator - test bed / functions / 
-
-// start defining the infratrucure (ie std_msgs/variables/services(as Libraries))
-//     frameLib for transform services. create a frame object, set base, point& frame.tranform(point) 
-//     winViz  load robots. accept sensor values (dynamic?). accept pose.  DRFU?
-
-// start thinking navplanner merge
-
-// ?functionality to get presentable demo / set prorities, best roadmap
-//  need to get model loaded
-//  
+//  start thinking navplanner merge
 
 namespace spiked3.winViz
 {
     public partial class MainWindow : RibbonWindow
     {
+
+        #region Depency_Properties
         public static readonly DependencyProperty MiniUisProperty =
             DependencyProperty.Register("MiniUis", typeof(ObservableCollection<UIElement>), typeof(MainWindow), new PropertyMetadata(new ObservableCollection<UIElement>()));
 
@@ -133,6 +122,8 @@ namespace spiked3.winViz
 
         public ObservableCollection<object> ViewObjects { get { return _ViewObjects; } }
 
+#endregion
+
         //////////////////////////
 
         private const string Broker = "127.0.0.1";
@@ -153,6 +144,82 @@ namespace spiked3.winViz
         private Vector3D yAxis = new Vector3D(0, 1, 0);
         private Vector3D zAxis = new Vector3D(0, 0, 1);
 
+        #region LIDAR
+        void InitLIDAR()
+        {
+            Slam = new Slam();
+            try
+            {
+                RpLidar = new RpLidarDriver(MachineToLidarPort[System.Environment.MachineName]);
+            }
+            catch (Exception ex)
+            {
+                Trace.WriteLine("Exception opening LIDAR COM port, LIDAR not available.", "error");
+                Trace.WriteLine(ex.Message, "1");
+                return;
+            }
+
+            RpLidar.NewScanSet += LidarNewScanSet;
+
+            // retry until valid device info
+            int tries = 0;
+            while (++tries < 5)
+            {
+                LidarDevInfoResponse di;
+                if (RpLidar.GetDeviceInfo(out di))
+                {
+                    if (di.Model == 0 && di.hardware == 0)
+                    {
+                        Trace.WriteLine(string.Format("Lidar Model({0}, {1}), Firmware({2}, {3})", di.Model, di.hardware,
+                            di.FirmwareMajor, di.FirmwareMinor));
+                        RpLidar.StartScan();
+                        return;
+                    }
+                }
+                else
+                {
+                    Trace.WriteLine("Unable to get device info from RP LIDAR, device reset", "warn");
+                    RpLidar.Reset();
+                    Thread.Sleep(500);
+                }
+            }
+
+            Trace.WriteLine("Start Lidar failed 5 (re)tries", "error");
+        }
+
+        private void LIDAR_Click(object sender, RoutedEventArgs e)
+        {
+            InitLIDAR();
+        }
+
+        void LidarNewScanSet(ScanPoint[] scanset)
+        {
+            Dispatcher.InvokeAsync(() =>
+            {
+                // provide an immutable sorted list for LIDARCanvas and others to use
+                LidarCanvas.Scans = new List<ScanPoint>(scanset.Length);
+
+                foreach (ScanPoint p in scanset)
+                    if (p != null)
+                        LidarCanvas.Scans.Add(new ScanPoint
+                        {
+                            Angle = p.Angle * Math.PI / 180.0,
+                            Distance = p.Distance,
+                            Quality = p.Quality
+                        });
+
+                List<double> derivatives = Slam.ComputeScanDerivatives(LidarCanvas.Scans);
+
+                LidarCanvas.Landmarks = Slam.FindLandmarksFromDerivatives(LidarCanvas.Scans, derivatives);
+                landmarks1.Landmarks = Slam.FindLandmarksFromDerivatives(LidarCanvas.Scans, derivatives);
+
+                LidarCanvas.InvalidateVisual();
+
+            });
+        }
+
+        #endregion
+
         public MainWindow()
         {
             InitializeComponent();
@@ -171,9 +238,6 @@ namespace spiked3.winViz
                 Width = 640;
                 Height = 480;
             }
-
-            if (Settings.Default.LastRobot != null && System.IO.File.Exists(Settings.Default.LastRobot))
-                LoadRobot(Settings.Default.LastRobot);
         }
 
         private void Window_Loaded(object sender, RoutedEventArgs e)
@@ -189,6 +253,9 @@ namespace spiked3.winViz
             Trace.WriteLine("MQTT Connected", "1");
 
             ViewObjects.Add(Mqtt);
+
+            if (Settings.Default.LastRobot != null && System.IO.File.Exists(Settings.Default.LastRobot))
+                LoadRobot(Settings.Default.LastRobot);
 
             var u = new LidarPanel { Width = 320, Height = 300, Margin = new Thickness(0, 4, 0, 4) };
             LidarCanvas = u.LidarCanvas;
@@ -214,7 +281,7 @@ namespace spiked3.winViz
                 if (MiniUis[miniIdx] is RobotPanel)
                     MiniUis.RemoveAt(miniIdx);
 
-            MiniUiAdd(new RobotPanel { Width = 320, ToolTip = filename }, "Robot1", Brushes.Blue);
+            MiniUiAdd(new RobotPanel { Mqtt = Mqtt, MaxWidth = 340, ToolTip = filename }, "Robot1", Brushes.Blue);
 
             foreach (var r in RobotDictionary.Values)
                 view1.Children.Remove(r);
@@ -398,91 +465,5 @@ namespace spiked3.winViz
             Settings.Default.LastRobot = LastRobot;
             Settings.Default.Save();
         }
-
-        #region LIDAR
-        void InitLIDAR()
-        {
-            Slam = new Slam();
-            try
-            {
-                RpLidar = new RpLidarDriver(MachineToLidarPort[System.Environment.MachineName]);
-            }
-            catch (Exception ex)
-            {
-                Trace.WriteLine("Exception opening LIDAR COM port, LIDAR not available.", "error");
-                Trace.WriteLine(ex.Message, "1");
-                return;
-            }
-
-            RpLidar.NewScanSet += LidarNewScanSet;
-
-            // retry until valid device info
-            int tries = 0;
-            while (++tries < 5)
-            {
-                LidarDevInfoResponse di;
-                if (RpLidar.GetDeviceInfo(out di))
-                {
-                    if (di.Model == 0 && di.hardware == 0)
-                    {
-                        Trace.WriteLine(string.Format("Lidar Model({0}, {1}), Firmware({2}, {3})", di.Model, di.hardware,
-                            di.FirmwareMajor, di.FirmwareMinor));
-                        RpLidar.StartScan();
-                        return;
-                    }
-                }
-                else
-                {
-                    Trace.WriteLine("Unable to get device info from RP LIDAR, device reset", "warn");
-                    RpLidar.Reset();
-                    Thread.Sleep(500);
-                }
-            }
-
-            Trace.WriteLine("Start Lidar failed 5 (re)tries", "error");
-        }
-
-        private void LIDAR_Click(object sender, RoutedEventArgs e)
-        {
-            InitLIDAR();
-        }
-
-        void LidarNewScanSet(ScanPoint[] scanset)
-        {
-            Dispatcher.InvokeAsync(() =>
-            {
-                // provide an immutable sorted list for LIDARCanvas and others to use
-                LidarCanvas.Scans = new List<ScanPoint>(scanset.Length);
-
-                foreach (ScanPoint p in scanset)
-                    if (p != null)
-                        LidarCanvas.Scans.Add(new ScanPoint
-                        {
-                            Angle = p.Angle * Math.PI / 180.0,
-                            Distance = p.Distance,
-                            Quality = p.Quality
-                        });
-
-                List<double> derivatives = Slam.ComputeScanDerivatives(LidarCanvas.Scans);
-
-                LidarCanvas.Landmarks = Slam.FindLandmarksFromDerivatives(LidarCanvas.Scans, derivatives);
-                landmarks1.Landmarks = Slam.FindLandmarksFromDerivatives(LidarCanvas.Scans, derivatives);
-
-                LidarCanvas.InvalidateVisual();
-
-            });
-        }
-
-        #endregion
-
-        private class RobotPose
-        {
-            public float H { get; set; }
-
-            public float X { get; set; }
-
-            public float Y { get; set; }
-        }
-
     }
 }

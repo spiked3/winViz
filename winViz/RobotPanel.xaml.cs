@@ -1,4 +1,5 @@
-﻿using System;
+﻿using Newtonsoft.Json;
+using System;
 using System.Collections.Generic;
 using System.Linq;
 using System.Text;
@@ -12,6 +13,7 @@ using System.Windows.Media;
 using System.Windows.Media.Imaging;
 using System.Windows.Navigation;
 using System.Windows.Shapes;
+using uPLibrary.Networking.M2Mqtt;
 
 namespace spiked3.winViz
 {
@@ -19,36 +21,65 @@ namespace spiked3.winViz
     /// 
     public partial class RobotPanel : UserControl
     {
+        public MqttClient Mqtt { get; set; }
+
         public RobotPanel()
         {
             InitializeComponent();
         }
 
-        /*
-        private void Forward_Click(object sender, RoutedEventArgs e)
-        {
-            MotorDirectionForward = true;
-            if (Mqtt != null) Mqtt.Publish("PC/M1", string.Format("\"p\":{0}", Speed).ToBytes());
-        }
-
         private void Stop_Click(object sender, RoutedEventArgs e)
         {
-            if (Mqtt != null) Mqtt.Publish("PC/M1", string.Format("\"p\":{0}", 0).ToBytes());
+            tglEsc.IsChecked = false;
+            SendRobot(new { Cmd = "Pwr", M1 = 0.0, M2 = 0.0 });
+        }
+
+        private void Forward_Click(object sender, RoutedEventArgs e)
+        {
+            SendRobot(new { Cmd = "Pwr", M1 = 40.0, M2 = 40.0 });
         }
 
         private void Back_Click(object sender, RoutedEventArgs e)
         {
-            MotorDirectionForward = false;
-            if (Mqtt != null) Mqtt.Publish("PC/M1", string.Format("\"p\":{0}", -Speed).ToBytes());
+            SendRobot(new { Cmd = "Pwr", M1 = -40.0, M2 = -40.0 });
         }
 
-        
-
-        private void SpeedChanged(object sender, RoutedPropertyChangedEventArgs<double> e)
+        private void Left_Click(object sender, RoutedEventArgs e)
         {
-            if (Mqtt != null)
-                Mqtt.Publish("PC/M1", string.Format("\"p\":{0}", MotorDirectionForward ? Speed : -Speed).ToBytes());
-        }         
-        */
+            SendRobot(new { Cmd = "Rot", Rel = -45 });
+        }
+
+        private void Right_Click(object sender, RoutedEventArgs e)
+        {
+            SendRobot(new { Cmd = "Rot", Rel = 45 });
+        }
+
+        private void UTurn_Click(object sender, RoutedEventArgs e)
+        {
+            SendRobot(new { Cmd = "Rot", Rel = 180 });
+        }
+
+        private void ToggleButton_Esc(object sender, RoutedEventArgs e)
+        {
+            SendRobot(new { Cmd = "Esc", Value = tglEsc.IsChecked ?? false ? 1 : 0 });
+        }
+
+        private void Init_Click(object sender, RoutedEventArgs e)
+        {
+            SendRobot(new { Cmd = "PID", Idx = 0, P = 0.02, I = 4.0, D = 0.0 });
+            SendRobot(new { Cmd = "Geom", TPR = 60, Diam = 175.0F, Base = 220.0F, mMax = 450 });
+            //SerialSend(new { Cmd = "CALI", Vals = new int[] { -333, -3632, 2311, -1062, 28, -11 } });
+        }
+
+        private void SendRobot(dynamic p)
+        {
+            Mqtt.Publish("robot1/Cmd", UTF8Encoding.ASCII.GetBytes(JsonConvert.SerializeObject(p)));
+        }
+
+        private void Button_Click(object sender, RoutedEventArgs e)
+        {
+            tglEsc.IsChecked = false;
+            SendRobot(new { Cmd = "Pwr", M1 = 0.0, M2 = 0.0 });
+        }
     }
 }

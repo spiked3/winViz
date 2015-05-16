@@ -8,8 +8,9 @@
     <Grid>
         <WrapPanel >
             <WrapPanel.Resources>
-                <Style TargetType="Button" >
-                    <Setter Property="Width" Value="56" />
+                <Style TargetType="ToggleButton" >
+                    <Setter Property="Width" Value="64" />
+                    <Setter Property="Height" Value="64" />
                     <Setter Property="Margin" Value="1,1,1,1" />
                 </Style>
                 <Style TargetType="Image" >
@@ -17,61 +18,61 @@
                     <Setter Property="Height" Value="32" />
                     <Setter Property="Stretch" Value="Uniform" />
                 </Style>
+                <Style TargetType="Button" >
+                    <Setter Property="Width" Value="64" />
+                    <Setter Property="Height" Value="64" />
+                    <Setter Property="Margin" Value="1,1,1,1" />
+                </Style>
             </WrapPanel.Resources>
-            <Button>
+            <Button Background="Red" Click="Button_Click" >
+                <StackPanel>
+                    <Image />
+                    <Label Content="E_Stop" Foreground="White" FontWeight="Bold"/>
+                </StackPanel>
+            </Button>
+            <Button Background="Yellow" Click="Init_Click">
+                <StackPanel>
+                    <Image />
+                    <Label Content="Init" />
+                </StackPanel>
+            </Button>
+            <Button Click="Forward_Click">
                 <StackPanel>
                     <Image Source="Images/Road-Forward.png" />
                     <Label Content="Forward" />
                 </StackPanel>
             </Button>
-
-            <Button >
+            <Button Click="Stop_Click" >
                 <StackPanel>
                     <Image Source="Images/Stop Media.png" />
                     <Label Content="Stop" />
                 </StackPanel>
-
             </Button>
-            <Button >
+            <Button Click="Left_Click" >
                 <StackPanel>
                     <Image Source="Images/Road-Left.png" />
                     <Label Content="Left" />
                 </StackPanel>
-
             </Button>
-            <Button >
+            <Button Click="Right_Click" >
                 <StackPanel>
                     <Image Source="Images/Road-Right.png" />
                     <Label Content="Right" />
                 </StackPanel>
-
             </Button>
-            <Button >
+            <Button Click="Back_Click" >
                 <StackPanel>
                     <Image Source="Images/Road-Backward.png" />
                     <Label Content="Back" />
                 </StackPanel>
-
             </Button>
-            <Button >
+            <Button Click="UTurn_Click" >
                 <StackPanel>
                     <Image Source="Images/U-turn.png" />
                     <Label Content="U-Turn" />
                 </StackPanel>
-
             </Button>
-
-            <!--<TextBlock Text="Speed" Grid.Row="0" Grid.Column="0" />
-                    <TextBlock Text="{Binding Speed,FallbackValue=50}" Grid.Row="0" Grid.Column="1" HorizontalAlignment="Center" />
-                    <Slider Minimum="-100" Maximum="100" Value="{Binding Speed}" SmallChange="5" LargeChange="20"
-                                TickFrequency="10" IsSnapToTickEnabled="True" TickPlacement="TopLeft"
-                                Grid.Row="1" Grid.ColumnSpan="2" />
-
-                    <TextBlock Text="Spare" Grid.Row="2" Grid.Column="0" />
-                    <TextBlock Text="{Binding Spare,FallbackValue=50}" Grid.Row="2" Grid.Column="1" HorizontalAlignment="Center" />
-                    <Slider Minimum="0" Maximum="100" Value="{Binding DrawScale}" SmallChange="5" LargeChange="20"
-                                TickFrequency="10" IsSnapToTickEnabled="True" TickPlacement="TopLeft"
-                                Grid.Row="3" Grid.ColumnSpan="2" />-->
+            <ToggleButton x:Name="tglEsc" Checked="ToggleButton_Esc" Unchecked="ToggleButton_Esc" Content="_Esc" />
         </WrapPanel>
     </Grid>
 </UserControl>

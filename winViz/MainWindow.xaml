@@ -80,7 +80,7 @@
             <TextBlock Text="{Binding State}" />
         </StatusBar>
 
-        <Expander ExpandDirection="Left" DockPanel.Dock="Right" Background="White" IsExpanded="False">
+        <Expander ExpandDirection="Left" DockPanel.Dock="Right" Background="White" IsExpanded="False" VerticalAlignment="Top">
             <Expander.Header>
                 <TextBlock Text="User Interface">
                     <TextBlock.LayoutTransform>
@@ -88,14 +88,7 @@
                     </TextBlock.LayoutTransform>
                 </TextBlock>
             </Expander.Header>
-            <ListBox ItemsSource="{Binding MiniUis}" Background="{x:Null}" Margin="0,4,0,4" BorderBrush="Transparent" >
-                <ListBox.Resources>
-                    <Style TargetType="Expander" >
-                        <Setter Property="Width" Value="340" />
-                    </Style>
-                </ListBox.Resources>
-
-            </ListBox>
+            <ListBox ItemsSource="{Binding MiniUis}" Background="{x:Null}" Margin="0,4,0,4" BorderBrush="Transparent" HorizontalContentAlignment="Center" />
         </Expander>
 
         <Expander x:Name="objectView1" ExpandDirection="Right" Background="White" DockPanel.Dock="Left">

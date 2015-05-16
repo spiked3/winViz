@@ -29,7 +29,7 @@ using System.Windows.Controls;
 using System.Text;
 
 // restyle ribbon button system menu to be a glassy S3 button, like dex and 3DS does w/infragistics
-//  robot object as object
+//  robot object as object - need model to know how to comm
 //  robot ribbon menu group should a tab created as a result of adding the robot
 //  start thinking navplanner merge
 
@@ -143,82 +143,6 @@ namespace spiked3.winViz
         private Vector3D xAxis = new Vector3D(1, 0, 0);
         private Vector3D yAxis = new Vector3D(0, 1, 0);
         private Vector3D zAxis = new Vector3D(0, 0, 1);
-
-        #region LIDAR
-        void InitLIDAR()
-        {
-            Slam = new Slam();
-            try
-            {
-                RpLidar = new RpLidarDriver(MachineToLidarPort[System.Environment.MachineName]);
-            }
-            catch (Exception ex)
-            {
-                Trace.WriteLine("Exception opening LIDAR COM port, LIDAR not available.", "error");
-                Trace.WriteLine(ex.Message, "1");
-                return;
-            }
-
-            RpLidar.NewScanSet += LidarNewScanSet;
-
-            // retry until valid device info
-            int tries = 0;
-            while (++tries < 5)
-            {
-                LidarDevInfoResponse di;
-                if (RpLidar.GetDeviceInfo(out di))
-                {
-                    if (di.Model == 0 && di.hardware == 0)
-                    {
-                        Trace.WriteLine(string.Format("Lidar Model({0}, {1}), Firmware({2}, {3})", di.Model, di.hardware,
-                            di.FirmwareMajor, di.FirmwareMinor));
-                        RpLidar.StartScan();
-                        return;
-                    }
-                }
-                else
-                {
-                    Trace.WriteLine("Unable to get device info from RP LIDAR, device reset", "warn");
-                    RpLidar.Reset();
-                    Thread.Sleep(500);
-                }
-            }
-
-            Trace.WriteLine("Start Lidar failed 5 (re)tries", "error");
-        }
-
-        private void LIDAR_Click(object sender, RoutedEventArgs e)
-        {
-            InitLIDAR();
-        }
-
-        void LidarNewScanSet(ScanPoint[] scanset)
-        {
-            Dispatcher.InvokeAsync(() =>
-            {
-                // provide an immutable sorted list for LIDARCanvas and others to use
-                LidarCanvas.Scans = new List<ScanPoint>(scanset.Length);
-
-                foreach (ScanPoint p in scanset)
-                    if (p != null)
-                        LidarCanvas.Scans.Add(new ScanPoint
-                        {
-                            Angle = p.Angle * Math.PI / 180.0,
-                            Distance = p.Distance,
-                            Quality = p.Quality
-                        });
-
-                List<double> derivatives = Slam.ComputeScanDerivatives(LidarCanvas.Scans);
-
-                LidarCanvas.Landmarks = Slam.FindLandmarksFromDerivatives(LidarCanvas.Scans, derivatives);
-                landmarks1.Landmarks = Slam.FindLandmarksFromDerivatives(LidarCanvas.Scans, derivatives);
-
-                LidarCanvas.InvalidateVisual();
-
-            });
-        }
-
-        #endregion
 
         public MainWindow()
         {
@@ -388,7 +312,7 @@ namespace spiked3.winViz
                 while (RobotH < 0)
                     RobotH += 360;
 
-                // north is up (in 2D), y+ is North
+                // heading 0 = north,  is up (in 2D) ie. y+ is North
                 var g = new Transform3DGroup();
                 g.Children.Add(new RotateTransform3D(new AxisAngleRotation3D(zAxis, 90 - RobotH)));
                 g.Children.Add(new TranslateTransform3D(RobotX, RobotY, RobotZ));
@@ -447,6 +371,11 @@ namespace spiked3.winViz
             Mqtt.Publish("Cmd/robot1", UTF8Encoding.ASCII.GetBytes(@"{""T"":""Cmd"", ""Cmd"":""Test1""}"));
         }
 
+        private void SaveLayout_Click(object sender, RoutedEventArgs e)
+        {
+            SaveSettings();
+        }
+
         void Test2_Click(object sender, RoutedEventArgs e)
         {
             Trace.WriteLine("Test2_Click", "1");
@@ -457,11 +386,15 @@ namespace spiked3.winViz
         {
             if (Mqtt != null && Mqtt.IsConnected)
                 Mqtt.Disconnect();
+            SaveSettings();
+        }
 
-            Settings.Default.Width = (float)((Window)sender).Width;
-            Settings.Default.Height = (float)((Window)sender).Height;
-            Settings.Default.Top = (float)((Window)sender).Top;
-            Settings.Default.Left = (float)((Window)sender).Left;
+        private void SaveSettings()
+        {
+            Settings.Default.Width = (float)Width;
+            Settings.Default.Height = (float)Height;
+            Settings.Default.Top = (float)Top;
+            Settings.Default.Left = (float)Left;
             Settings.Default.LastRobot = LastRobot;
             Settings.Default.Save();
         }

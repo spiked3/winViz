@@ -32,6 +32,8 @@
             <Ribbon.ApplicationMenu>
                 <!--  style me -->
                 <RibbonApplicationMenu>
+                    <RibbonMenuItem Header="Save Layout" Click="SaveLayout_Click" />
+                    <Separator />
                     <RibbonMenuItem Header="Exit" ImageSource="Images/Power.png" Click="Exit_Click" />
                 </RibbonApplicationMenu>
             </Ribbon.ApplicationMenu>

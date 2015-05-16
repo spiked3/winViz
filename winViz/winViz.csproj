@@ -97,6 +97,7 @@
       <DependentUpon>ImportDlg.xaml</DependentUpon>
     </Compile>
     <Compile Include="LandmarksVisual3D.cs" />
+    <Compile Include="Lidar.cs" />
     <Compile Include="LidarPanel.xaml.cs">
       <DependentUpon>LidarPanel.xaml</DependentUpon>
     </Compile>

@@ -19,7 +19,7 @@ namespace spiked3.winViz
             Slam = new Slam();
             try
             {
-                RpLidar = new RpLidarDriver(MachineToLidarPort[System.Environment.MachineName]);
+                RpLidar = new RpLidarDriver(ConfigManager.Get<string>("lidar"));
             }
             catch (Exception ex)
             {

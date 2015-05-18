@@ -122,17 +122,17 @@ namespace spiked3.winViz
 
         public ObservableCollection<object> ViewObjects { get { return _ViewObjects; } }
 
-#endregion
+        #endregion
 
         //////////////////////////
 
         private const string Broker = "127.0.0.1";
+        //private const string Broker = "192.168.1.30";
         private const double r = 10.0;
         ObservableCollection<object> _ViewObjects = new ObservableCollection<object>();
         private bool firstStep = true;
         string LastRobot;
         LidarCanvas LidarCanvas;
-        Dictionary<string, string> MachineToLidarPort = new Dictionary<string, string>();
 
         private MqttClient Mqtt;
         Dictionary<string, Visual3D> RobotDictionary = new Dictionary<string, Visual3D>();
@@ -147,10 +147,6 @@ namespace spiked3.winViz
         public MainWindow()
         {
             InitializeComponent();
-
-            MachineToLidarPort.Add("WS1", "com6");
-            MachineToLidarPort.Add("WS2", "com8");
-            MachineToLidarPort.Add("MSI2", "com3");
 
             Width = Settings.Default.Width;
             Height = Settings.Default.Height;
@@ -169,7 +165,8 @@ namespace spiked3.winViz
             spiked3.Console.MessageLevel = 3;
             Trace.WriteLine("winViz / Gyro Fusion 0.3 © 2015 spiked3.com", "+");
             State = "MQTT Connecting ...";
-            Mqtt = new MqttClient(Broker);
+            //Mqtt = new MqttClient(ConfigManager.Get<string>("brokerPi"));
+            Mqtt = new MqttClient(ConfigManager.Get<string>("brokerSelf"));
             Mqtt.MqttMsgPublishReceived += Mqtt_MqttMsgPublishReceived;
             Mqtt.Connect("PC");
             Mqtt.Subscribe(new[] { "robot1/#" }, new[] { MqttMsgBase.QOS_LEVEL_EXACTLY_ONCE });  //+++ per robot
@@ -253,12 +250,18 @@ namespace spiked3.winViz
 
         void MiniUiAdd(UIElement u, string title, Brush bg)
         {
-            var ex = new Expander { ExpandDirection = ExpandDirection.Down, Header = title, Background = bg, Foreground = Brushes.White, Padding = new Thickness(4) };
-            var gr = new Grid { HorizontalAlignment = System.Windows.HorizontalAlignment.Center };
-            gr.Children.Add(u);
-            ex.Content = gr;
+            var ex = new Expander
+            {
+                ExpandDirection = ExpandDirection.Down,
+                Header = title,
+                Background = bg,
+                Foreground = Brushes.White,
+                Padding = new Thickness(4),
+                HorizontalAlignment = HorizontalAlignment.Stretch,
+                HorizontalContentAlignment = HorizontalAlignment.Stretch,
+            };
+            ex.Content = u;
             MiniUis.Add(ex);
-            //MiniUis.Add(new Separator { Width = 260, Margin = new Thickness(12) });
         }
 
         private void Model_Click(object sender, RoutedEventArgs e)
@@ -279,14 +282,17 @@ namespace spiked3.winViz
                 case "robot1":
                     {
                         dynamic j = JsonConvert.DeserializeObject(System.Text.Encoding.UTF8.GetString(e.Message));
-                        string type = (string)j["T"];
-                        if (type.Equals("Pose"))
-                            Dispatcher.InvokeAsync(() =>
-                            {
-                                NewRobotPose("robot1", (double)j["X"] * 100, (double)j["Y"] * 100, 0.0, (double)j["H"]);
-                            }, DispatcherPriority.Render);
-                        else if (type.Equals("Log"))
-                            Trace.WriteLine(System.Text.Encoding.UTF8.GetString(e.Message));
+                        if (j != null)
+                        {
+                            string type = (string)j["T"];
+                            if (type.Equals("Pose"))
+                                Dispatcher.InvokeAsync(() =>
+                                {
+                                    NewRobotPose("robot1", (double)j["X"] * 100, (double)j["Y"] * 100, 0.0, (double)j["H"]);
+                                }, DispatcherPriority.Render);
+                            else if (type.Equals("Log"))
+                                Trace.WriteLine(System.Text.Encoding.UTF8.GetString(e.Message));
+                        }
                     }
                     break;
 

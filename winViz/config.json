@@ -1,0 +1,19 @@
+﻿{
+	"WS2" : {
+		"lidar" : "com4",
+		"brokerSelf" : "127.0.0.1",
+		"brokerPi" : "192.168.1.30",
+	},
+
+	"MSI2" : {
+		"lidar" : "com4",
+		"brokerSelf" : "127.0.0.1",
+		"brokerPi" : "192.168.1.30",
+	},
+
+	"SURFACE2" : {
+		"lidar" : "com4",
+		"brokerSelf" : "127.0.0.1",
+		"brokerPi" : "192.168.1.30",
+	},
+}

@@ -126,8 +126,6 @@ namespace spiked3.winViz
 
         //////////////////////////
 
-        private const string Broker = "127.0.0.1";
-        //private const string Broker = "192.168.1.30";
         private const double r = 10.0;
         ObservableCollection<object> _ViewObjects = new ObservableCollection<object>();
         private bool firstStep = true;
@@ -165,8 +163,8 @@ namespace spiked3.winViz
             spiked3.Console.MessageLevel = 3;
             Trace.WriteLine("winViz / Gyro Fusion 0.3 © 2015 spiked3.com", "+");
             State = "MQTT Connecting ...";
-            //Mqtt = new MqttClient(ConfigManager.Get<string>("brokerPi"));
-            Mqtt = new MqttClient(ConfigManager.Get<string>("brokerSelf"));
+            Mqtt = new MqttClient(ConfigManager.Get<string>("brokerPi"));
+            //Mqtt = new MqttClient(ConfigManager.Get<string>("brokerSelf"));
             Mqtt.MqttMsgPublishReceived += Mqtt_MqttMsgPublishReceived;
             Mqtt.Connect("PC");
             Mqtt.Subscribe(new[] { "robot1/#" }, new[] { MqttMsgBase.QOS_LEVEL_EXACTLY_ONCE });  //+++ per robot
@@ -290,8 +288,6 @@ namespace spiked3.winViz
                                 {
                                     NewRobotPose("robot1", (double)j["X"] * 100, (double)j["Y"] * 100, 0.0, (double)j["H"]);
                                 }, DispatcherPriority.Render);
-                            else if (type.Equals("Log"))
-                                Trace.WriteLine(System.Text.Encoding.UTF8.GetString(e.Message));
                         }
                     }
                     break;

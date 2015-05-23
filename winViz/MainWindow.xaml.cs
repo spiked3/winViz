@@ -163,8 +163,8 @@ namespace spiked3.winViz
             spiked3.Console.MessageLevel = 3;
             Trace.WriteLine("winViz / Gyro Fusion 0.3 © 2015 spiked3.com", "+");
             State = "MQTT Connecting ...";
-            Mqtt = new MqttClient(ConfigManager.Get<string>("brokerPi"));
-            //Mqtt = new MqttClient(ConfigManager.Get<string>("brokerSelf"));
+            //Mqtt = new MqttClient(ConfigManager.Get<string>("brokerPi"));
+            Mqtt = new MqttClient(ConfigManager.Get<string>("brokerSelf"));
             Mqtt.MqttMsgPublishReceived += Mqtt_MqttMsgPublishReceived;
             Mqtt.Connect("PC");
             Mqtt.Subscribe(new[] { "robot1/#" }, new[] { MqttMsgBase.QOS_LEVEL_EXACTLY_ONCE });  //+++ per robot

@@ -3,6 +3,7 @@
              xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
              xmlns:mc="http://schemas.openxmlformats.org/markup-compatibility/2006"
              xmlns:d="http://schemas.microsoft.com/expression/blend/2008"
+             xmlns:spiked3="clr-namespace:spiked3"
              mc:Ignorable="d"
              d:DesignHeight="300" d:DesignWidth="320">
     <Grid>
@@ -24,19 +25,21 @@
                     <Setter Property="Margin" Value="1,1,1,1" />
                 </Style>
             </WrapPanel.Resources>
+            <spiked3:JoystickControl x:Name="joy1" Width="128" Height="128" Background="Ivory" Margin="4" />
             <Button Background="Red" Click="Button_Click" >
                 <StackPanel>
-                    <Image />
+                    <Image Source="Images/Stop Media.png" />
                     <Label Content="E_Stop" Foreground="White" FontWeight="Bold"/>
                 </StackPanel>
             </Button>
             <Button Background="Yellow" Click="Init_Click">
                 <StackPanel>
-                    <Image />
+                    <Image Source="Images/Robot.png" />
                     <Label Content="Init" />
                 </StackPanel>
             </Button>
-            <Button Click="Forward_Click">
+            
+            <!--<Button Click="Forward_Click">
                 <StackPanel>
                     <Image Source="Images/Road-Forward.png" />
                     <Label Content="Forward" />
@@ -71,7 +74,7 @@
                     <Image Source="Images/U-turn.png" />
                     <Label Content="U-Turn" />
                 </StackPanel>
-            </Button>
+            </Button>-->
             <ToggleButton x:Name="tglEsc" Checked="ToggleButton_Esc" Unchecked="ToggleButton_Esc" Content="_Esc" />
         </WrapPanel>
     </Grid>

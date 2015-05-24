@@ -116,8 +116,6 @@
 
             <Grid  Background="{StaticResource worldBg}" >
 
-
-
                 <helix:HelixViewport3D x:Name="view1" Camera="{helix:PerspectiveCamera 20, -50, 20}" ZoomExtentsWhenLoaded="False"
                                        ModelUpDirection="0,0,1" ShowCoordinateSystem="True" >
                     <helix:SunLight />

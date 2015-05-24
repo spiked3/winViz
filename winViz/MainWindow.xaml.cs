@@ -19,7 +19,6 @@ using uPLibrary.Networking.M2Mqtt.Messages;
 
 using spiked3;
 using spiked3.winViz.Properties;
-using spiked3.winRobotLib;
 
 using RpLidarLib;
 using RnSlamLib;
@@ -174,7 +173,7 @@ namespace spiked3.winViz
             ViewObjects.Add(Mqtt);
 
             if (Settings.Default.LastRobot != null && System.IO.File.Exists(Settings.Default.LastRobot))
-                LoadRobot(Settings.Default.LastRobot);
+                theRobot = LoadRobot(Settings.Default.LastRobot);
 
             var u = new LidarPanel { Width = 320, Height = 300, Margin = new Thickness(0, 4, 0, 4) };
             LidarCanvas = u.LidarCanvas;
@@ -191,8 +190,10 @@ namespace spiked3.winViz
             Close();
         }
 
-        void LoadRobot(string filename)
+        Robot LoadRobot(string filename)
         {
+            Robot r = new Robot { Mqtt = Mqtt };
+
             // +++ handle multi robots
 
             // for now - delete existing panel if there
@@ -200,10 +201,12 @@ namespace spiked3.winViz
                 if (MiniUis[miniIdx] is RobotPanel)
                     MiniUis.RemoveAt(miniIdx);
 
-            MiniUiAdd(new RobotPanel { Mqtt = Mqtt, MaxWidth = 340, ToolTip = filename }, "Robot1", Brushes.Blue);
-
-            foreach (var r in RobotDictionary.Values)
-                view1.Children.Remove(r);
+            r.Panel = new RobotPanel { MaxWidth = 340, ToolTip = filename, DataContext = r };
+            r.Panel.joy1.JoystickMovedListeners += JoystickHandler;
+            MiniUiAdd(r.Panel, "Robot1", Brushes.Blue);
+            
+            foreach (var robt in RobotDictionary.Values)
+                view1.Children.Remove(robt);
             RobotDictionary.Clear();        // we are only supporting one at the moment
 
             MeshGeometryVisual3D robot = new MeshGeometryVisual3D();
@@ -239,6 +242,22 @@ namespace spiked3.winViz
             NewRobotPose("robot1", 0, 0, 0, 0);
             firstStep = true;
             LastRobot = filename;
+
+            return r;
+        }
+
+        double lastJoyM1, lastJoyM2;
+        Robot theRobot;
+
+        private void JoystickHandler(rChordata.DiamondPoint p)
+        {
+            if (p.Left != lastJoyM1 || p.Right != lastJoyM2)
+            {
+                theRobot.SendPilot(new { Cmd = "Pwr", M1 = p.Left, M2 = p.Right });
+                lastJoyM1 = p.Left;
+                lastJoyM2 = p.Right;
+            }
+
         }
 
         private void MenuExit_Click(object sender, RoutedEventArgs e)

@@ -7,3 +7,6 @@
 [submodule "winViz/Plumbing"]
 	path = winViz/Plumbing
 	url = //JEFF/Git2/Plumbing.git
+[submodule "XInputDotNet"]
+	path = XInputDotNet
+	url = https://github.com/speps/XInputDotNet.git

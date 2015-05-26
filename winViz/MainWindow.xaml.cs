@@ -133,7 +133,7 @@ namespace spiked3.winViz
 
         private MqttClient Mqtt;
         Dictionary<string, Visual3D> RobotDictionary = new Dictionary<string, Visual3D>();
-        RpLidarDriver RpLidar;
+        ILidar RpLidar;
         Slam Slam;
         private int StartAt = 0, Step = 4;
         private double startX = -10.0, startY = 0.0;
@@ -162,8 +162,8 @@ namespace spiked3.winViz
             spiked3.Console.MessageLevel = 3;
             Trace.WriteLine("winViz / Gyro Fusion 0.3 © 2015 spiked3.com", "+");
             State = "MQTT Connecting ...";
-            //Mqtt = new MqttClient(ConfigManager.Get<string>("brokerPi"));
-            Mqtt = new MqttClient(ConfigManager.Get<string>("brokerSelf"));
+            Mqtt = new MqttClient(ConfigManager.Get<string>("brokerPi"));
+            //Mqtt = new MqttClient(ConfigManager.Get<string>("brokerSelf"));
             Mqtt.MqttMsgPublishReceived += Mqtt_MqttMsgPublishReceived;
             Mqtt.Connect("PC");
             Mqtt.Subscribe(new[] { "robot1/#" }, new[] { MqttMsgBase.QOS_LEVEL_EXACTLY_ONCE });  //+++ per robot
@@ -305,7 +305,7 @@ namespace spiked3.winViz
                             if (type.Equals("Pose"))
                                 Dispatcher.InvokeAsync(() =>
                                 {
-                                    NewRobotPose("robot1", (double)j["X"] * 100, (double)j["Y"] * 100, 0.0, (double)j["H"]);
+                                    NewRobotPose("robot1", (double)j["X"], (double)j["Y"], 0.0, (double)j["H"]);
                                 }, DispatcherPriority.Render);
                         }
                     }

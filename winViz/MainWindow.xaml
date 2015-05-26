@@ -69,8 +69,8 @@
                         </Grid.RowDefinitions>
 
                         <TextBlock Text="Spare" Grid.Column="0" />
-                        <TextBlock Text="{Binding Spare,FallbackValue=99.9}" Grid.Column="1" HorizontalAlignment="Center" />
-                        <Slider Minimum=".50" Maximum="1" Value="{Binding FadeFactor}" SmallChange=".05" LargeChange=".2" TickFrequency=".05"
+                        <TextBlock Text="99.9" Grid.Column="1" HorizontalAlignment="Center" />
+                        <Slider Minimum=".50" Maximum="1" SmallChange=".05" LargeChange=".2" TickFrequency=".05"
                             IsSnapToTickEnabled="True" TickPlacement="TopLeft" Grid.Row="1" Grid.ColumnSpan="2" />
                     </Grid>
                 </RibbonGroup>

@@ -1,40 +1,16 @@
-﻿// RoboNUC ©2014 Mike Partain
-// This file is NOT open source
-// 
-// RnMaster :: RpLidarLib :: RpLidarDriver.cs 
-// 
-// /* ----------------------------------------------------------------------------------- */
-
-#region Usings
-
+﻿using RpLidarLib;
 using System;
 using System.Collections.Generic;
-using System.ComponentModel;
 using System.Diagnostics;
-using System.Globalization;
 using System.IO.Ports;
 using System.Linq;
-using System.Runtime.InteropServices;
 using System.Text;
-using System.Threading;
-using System.Threading.Tasks;
 using System.Timers;
-using System.Windows;
-using System.Windows.Controls;
-using System.Windows.Input;
-using System.Windows.Media;
-using System.Windows.Threading;
-using Timer = System.Timers.Timer;
 
-#endregion
-
-namespace RpLidarLib
+namespace spiked3
 {
-    public class RpLidarDriver : IDisposable
+    public class RpLidarSerial : ILidar
     {
-        static readonly log4net.ILog log =
-            log4net.LogManager.GetLogger(System.Reflection.MethodBase.GetCurrentMethod().DeclaringType);
-
         readonly string[] HealtStatusStrings = { "Good", "Poor", "Critical", "Unknown" };
 
         SerialPort Lidar;
@@ -44,10 +20,9 @@ namespace RpLidarLib
 
         ScanPoint[] ScanData = new ScanPoint[360];
         bool StartOfNewScan = true;
-        public delegate void NewScanSetHandler(ScanPoint[] Scanset);
-        public event NewScanSetHandler NewScanSet;
+        public event LidarBase.NewScanSetHandler NewScanSet;
 
-        public RpLidarDriver(string comPort)
+        public RpLidarSerial(string comPort)
         {
             Open(comPort);
         }
@@ -55,15 +30,12 @@ namespace RpLidarLib
         public void Dispose()
         {
             if (Lidar != null)
-            {
                 Lidar.Close();
-                //Lidar.Dispose();
-            }
         }
 
-        void Open(string comPort)
+        bool Open(string comPort)
         {
-            log.Debug("RpLidarDriver::Open");
+            Trace.WriteLine("RpLidarDriver::Open","2");
             Lidar = new SerialPort(comPort, 115200, Parity.None, 8, StopBits.One);
             try
             {
@@ -71,8 +43,30 @@ namespace RpLidarLib
             }
             catch (Exception ex)
             {
-                    throw ex;   // bubblw up
+                throw ex;   // bubblw up
             }
+
+            // retry until valid device info
+            int tries = 0;
+            while (++tries < 5)
+            {
+                LidarDevInfoResponse di;
+                if (GetDeviceInfo(out di))
+                {
+                    if (di.Model == 0 && di.hardware == 0)
+                    {
+                        Trace.WriteLine($"Lidar Model({di.Model}, {di.hardware}), Firmware({di.FirmwareMajor}, {di.FirmwareMinor})");
+                        return true;
+                    }
+                }
+                else
+                {
+                    Trace.WriteLine("Unable to get device info from RP LIDAR, device reset", "warn");
+                    Reset();
+                }
+            }
+            Trace.WriteLine("Open Lidar failed 5 (re)tries", "error");
+            return false;
         }
 
         public void LidarFlush()
@@ -98,7 +92,7 @@ namespace RpLidarLib
             Lidar.Write(b, 0, b.Length);
         }
 
-        public void StartScan()
+        public bool Start()
         {
             if (Lidar != null && Lidar.IsOpen)
             {
@@ -112,6 +106,7 @@ namespace RpLidarLib
                     Lidar.DataReceived += LidarScanDataReceived; // we expect responses until we tell it to stop
                 }
             }
+            return (Lidar != null && Lidar.IsOpen);
         }
 
         void LidarScanDataReceived(object sender, SerialDataReceivedEventArgs e)
@@ -182,7 +177,7 @@ namespace RpLidarLib
                 {
                     hr = r.ByteArrayToStructure<LidarHealthResponse>(0);
                     Debug.Assert(hr.Status <= 3);
-                    log.Info(string.Format("Lidar Health {0}", HealtStatusStrings[hr.Status]));
+                    Trace.WriteLine(string.Format("Lidar Health {0}", HealtStatusStrings[hr.Status]),"2");
                     return true;
                 }
             }
@@ -201,8 +196,7 @@ namespace RpLidarLib
                 if (GetLidarResponseWTimeout(out r, 7 + 20, 500))
                 {
                     di = r.ByteArrayToStructure<LidarDevInfoResponse>(0);
-                    log.Info(string.Format("Model({0}) Firmware({1},{2}) Hardware({3}) serial({4})",
-                        di.Model, di.FirmwareMajor, di.FirmwareMinor, di.hardware, BitConverter.ToString(di.SerialNum)));
+                    Trace.WriteLine($"Model({di.Model}) Firmware({di.FirmwareMajor},{di.FirmwareMinor}) Hardware({di.hardware}) serial({BitConverter.ToString(di.SerialNum)})");                        
                     return true;
                 }
             }
@@ -217,7 +211,7 @@ namespace RpLidarLib
                 LidarRequest(LidarCommand.Reset);
                 Lidar.Close();
                 Lidar.Dispose();
-                Thread.Sleep(500);
+                System.Threading.Thread.Sleep(500);
             }
         }
 
@@ -226,7 +220,7 @@ namespace RpLidarLib
             if (Lidar != null && Lidar.IsOpen)
             {
                 LidarRequest(LidarCommand.Stop);
-                Thread.Sleep(100);
+                System.Threading.Thread.Sleep(100);
                 LidarFlush();
                 Lidar.Close();
                 Lidar.Dispose();
@@ -250,7 +244,7 @@ namespace RpLidarLib
                         if (idx >= expectedLength)
                             return true; // timer should be auto disposed??
                     }
-                    Thread.Sleep(2);
+                    System.Threading.Thread.Sleep(2);
                 }
                 return false;
             }
@@ -261,6 +255,5 @@ namespace RpLidarLib
             ((Timer)sender).Stop();
             lidarTimedOut = true;
         }
-
     }
 }

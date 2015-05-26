@@ -26,6 +26,27 @@ namespace spiked3.winViz
             InitializeComponent();
         }
 
+        private void ToggleButton_Esc(object sender, RoutedEventArgs e)
+        {
+            Robot.SendPilot(new { Cmd = "Esc", Value = tglEsc.IsChecked ?? false ? 1 : 0 });
+        }
+
+        private void Init_Click(object sender, RoutedEventArgs e)
+        {
+            Robot.SendPilot(new { Cmd = "PID", Idx = 0, P = 0.15, I = .03, D = .04 });
+            Robot.SendPilot(new { Cmd = "Geom", TPR = 60, Diam = 175.0F, Base = 220.0F, mMax = 450 });
+            //SerialSend(new { Cmd = "CALI", Vals = new int[] { -333, -3632, 2311, -1062, 28, -11 } });
+        }
+
+        private void Button_Click(object sender, RoutedEventArgs e)
+        {
+            tglEsc.IsChecked = false;
+            Robot.SendPilot(new { Cmd = "Pwr", M1 = 0.0, M2 = 0.0 });
+        }
+    }
+}
+
+
         //private void Stop_Click(object sender, RoutedEventArgs e)
         //{
         //    Robot.SendPilot(new { Cmd = "Pwr", M1 = 0.0, M2 = 0.0 });
@@ -55,23 +76,3 @@ namespace spiked3.winViz
         //{
         //    Robot.SendPilot(new { Cmd = "Rot", Rel = 180 });
         //}
-
-        private void ToggleButton_Esc(object sender, RoutedEventArgs e)
-        {
-            Robot.SendPilot(new { Cmd = "Esc", Value = tglEsc.IsChecked ?? false ? 1 : 0 });
-        }
-
-        private void Init_Click(object sender, RoutedEventArgs e)
-        {
-            Robot.SendPilot(new { Cmd = "PID", Idx = 0, P = 0.15, I = .03, D = .04 });
-            Robot.SendPilot(new { Cmd = "Geom", TPR = 60, Diam = 175.0F, Base = 220.0F, mMax = 450 });
-            //SerialSend(new { Cmd = "CALI", Vals = new int[] { -333, -3632, 2311, -1062, 28, -11 } });
-        }
-
-        private void Button_Click(object sender, RoutedEventArgs e)
-        {
-            tglEsc.IsChecked = false;
-            Robot.SendPilot(new { Cmd = "Pwr", M1 = 0.0, M2 = 0.0 });
-        }
-    }
-}

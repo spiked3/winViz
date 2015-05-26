@@ -14,12 +14,12 @@ namespace spiked3.winViz
 {
     public partial class MainWindow : RibbonWindow
     {
-        void InitLIDAR()
+        private void LIDAR_Click(object sender, RoutedEventArgs e)
         {
             Slam = new Slam();
             try
             {
-                RpLidar = new RpLidarDriver(ConfigManager.Get<string>("lidar"));
+                RpLidar = new RpLidarSerial(ConfigManager.Get<string>("lidar"));
             }
             catch (Exception ex)
             {
@@ -30,35 +30,7 @@ namespace spiked3.winViz
 
             RpLidar.NewScanSet += LidarNewScanSet;
 
-            // retry until valid device info
-            int tries = 0;
-            while (++tries < 5)
-            {
-                LidarDevInfoResponse di;
-                if (RpLidar.GetDeviceInfo(out di))
-                {
-                    if (di.Model == 0 && di.hardware == 0)
-                    {
-                        Trace.WriteLine(string.Format("Lidar Model({0}, {1}), Firmware({2}, {3})", di.Model, di.hardware,
-                            di.FirmwareMajor, di.FirmwareMinor));
-                        RpLidar.StartScan();
-                        return;
-                    }
-                }
-                else
-                {
-                    Trace.WriteLine("Unable to get device info from RP LIDAR, device reset", "warn");
-                    RpLidar.Reset();
-                    Thread.Sleep(500);
-                }
-            }
-
-            Trace.WriteLine("Start Lidar failed 5 (re)tries", "error");
-        }
-
-        private void LIDAR_Click(object sender, RoutedEventArgs e)
-        {
-            InitLIDAR();
+            RpLidar.Start();
         }
 
         void LidarNewScanSet(ScanPoint[] scanset)

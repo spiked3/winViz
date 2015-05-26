@@ -15,8 +15,6 @@ using System.Windows;
 
 namespace RpLidarLib
 {
-    // todo common headers
-
     public enum LidarCommand : byte
     {
         Stop = 0x25,
@@ -71,46 +69,6 @@ namespace RpLidarLib
         public Int16 ErrorCode;
     }
 
-    public class ScanPoint
-    {
-        public double Angle { get; set; }
-
-        public double Distance { get; set; }
-
-        public int Quality { get; set; }
-
-        public DateTime TimeOfDeath { get; set; }
-    }
-
-    public class Feature
-    {
-        public Feature(Point position)
-        {
-            Position = position;
-        }
-
-        private Feature()
-        {
-            /* for serializer */
-        }
-
-        public Point Position { get; set; }
-    }
-
-    public class Landmark
-    {
-        public Point Position;
-
-        public Landmark(Point position)
-        {
-            Position = position;
-        }
-
-        public Landmark()
-        {
-            /* for serializer */
-        }
-    }
 
     public static class Extensions
     {

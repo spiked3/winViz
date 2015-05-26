@@ -16,7 +16,7 @@
     <TargetFrameworkProfile />
   </PropertyGroup>
   <PropertyGroup Condition=" '$(Configuration)|$(Platform)' == 'Debug|AnyCPU' ">
-    <PlatformTarget>AnyCPU</PlatformTarget>
+    <PlatformTarget>x64</PlatformTarget>
     <DebugSymbols>true</DebugSymbols>
     <DebugType>full</DebugType>
     <Optimize>false</Optimize>
@@ -72,6 +72,9 @@
     <Reference Include="Xceed.Wpf.Toolkit, Version=2.4.0.0, Culture=neutral, PublicKeyToken=3e4669d2f30244f4, processorArchitecture=MSIL">
       <SpecificVersion>False</SpecificVersion>
       <HintPath>..\packages\Extended.Wpf.Toolkit.2.4\lib\net40\Xceed.Wpf.Toolkit.dll</HintPath>
+    </Reference>
+    <Reference Include="XInputDotNetPure">
+      <HintPath>..\..\pilot_test\pilot_test\bin\Debug\XInputDotNetPure.dll</HintPath>
     </Reference>
   </ItemGroup>
   <ItemGroup>
@@ -190,10 +193,6 @@
     <ProjectReference Include="..\SlamLib\RnSlamLib.csproj">
       <Project>{7ed2c620-b656-49f9-88f2-23521a12c041}</Project>
       <Name>RnSlamLib</Name>
-    </ProjectReference>
-    <ProjectReference Include="..\XInputDotNet\XInputDotNetPure\XInputDotNetPure.csproj">
-      <Project>{952700cd-a384-43a4-ac4b-52256f83836e}</Project>
-      <Name>XInputDotNetPure</Name>
     </ProjectReference>
   </ItemGroup>
   <ItemGroup>

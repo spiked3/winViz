@@ -26,6 +26,7 @@ using RnSlamLib;
 using HelixToolkit.Wpf;
 using System.Windows.Controls;
 using System.Text;
+using NDesk.Options;
 
 // restyle ribbon button system menu to be a glassy S3 button, like dex and 3DS does w/infragistics
 //  robot object as object - need model to know how to comm
@@ -131,7 +132,8 @@ namespace spiked3.winViz
         string LastRobot;
         LidarCanvas LidarCanvas;
 
-        private MqttClient Mqtt;
+        string brokerString;
+        MqttClient Mqtt;
         Dictionary<string, Visual3D> RobotDictionary = new Dictionary<string, Visual3D>();
         ILidar RpLidar;
         Slam Slam;
@@ -144,6 +146,16 @@ namespace spiked3.winViz
         public MainWindow()
         {
             InitializeComponent();
+            //Mqtt = new MqttClient(ConfigManager.Get<string>(brokerString));
+
+            brokerString = "127.0.0.1";
+
+            var p = new OptionSet
+            {
+                   { "broker=", (v) => { brokerString = ConfigManager.Get<string>(v); } },
+            };
+
+            p.Parse(Environment.GetCommandLineArgs());
 
             Width = Settings.Default.Width;
             Height = Settings.Default.Height;
@@ -161,9 +173,11 @@ namespace spiked3.winViz
         {
             spiked3.Console.MessageLevel = 3;
             Trace.WriteLine("winViz / Gyro Fusion 0.3 © 2015 spiked3.com", "+");
-            State = "MQTT Connecting ...";
-            Mqtt = new MqttClient(ConfigManager.Get<string>("brokerPi"));
+            //Mqtt = new MqttClient(ConfigManager.Get<string>("brokerPi"));
             //Mqtt = new MqttClient(ConfigManager.Get<string>("brokerSelf"));
+            State = $"MQTT Connecting {brokerString}";
+            Trace.WriteLine(State, "1");
+            Mqtt = new MqttClient(brokerString);
             Mqtt.MqttMsgPublishReceived += Mqtt_MqttMsgPublishReceived;
             Mqtt.Connect("PC");
             Mqtt.Subscribe(new[] { "robot1/#" }, new[] { MqttMsgBase.QOS_LEVEL_EXACTLY_ONCE });  //+++ per robot

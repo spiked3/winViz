@@ -45,7 +45,8 @@
                         <RibbonButton Label="Step"  LargeImageSource="Images/Media-Pause.png" Click="Step_Click" />
                         <RibbonButton Label="Test1"  LargeImageSource="Images/Chat - Next-01.png" Click="Test1_Click" />
                         <RibbonButton Label="Test2" LargeImageSource="Images/Chat - Next-01.png" Click="Test2_Click" />
-                        <RibbonButton Label="LIDAR" Click="LIDAR_Click " LargeImageSource="Images/Radar New.png" />
+                        <RibbonButton Label="LIDAR Serial" Click="LIDAR_Serial_Click " LargeImageSource="Images/Radar New.png" />
+                        <RibbonButton Label="LIDAR MQTT" Click="LIDAR_MQTT_Click " LargeImageSource="Images/Radar New.png" />
                     </StackPanel>
                 </RibbonGroup>
                 <RibbonGroup Header="Main">
@@ -125,8 +126,8 @@
                     <!--<helix:CombinedManipulator TargetTransform="{Binding Transform, ElementName=robot1}" />-->
                     <local:LandmarksVisual3D x:Name="landmarks1" Landmarks="{Binding Landmarks}" />
                     <!--<helix:PipeVisual3D Diameter="1" Point1="2,2,0" Point2="2,2,2" Fill="Green"  />-->
-                    <helix:SphereVisual3D Radius=".5" Fill="White" />
-                    <helix:GridLinesVisual3D Length="100" Width="100" MajorDistance="10" MinorDistance="5" x:Name="grid1" />
+                    <helix:SphereVisual3D Radius=".05" Fill="White" />
+                    <helix:GridLinesVisual3D Thickness=".01" Length="100" Width="100" MajorDistance="10" MinorDistance="1" x:Name="grid1"  />
                 </helix:HelixViewport3D>
 
                 <!--<Border x:Name="overView1" HorizontalAlignment="Right" VerticalAlignment="Bottom" BorderBrush="Black" BorderThickness="4" Margin="4" Width="240" Height="180"

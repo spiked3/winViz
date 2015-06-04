@@ -221,7 +221,7 @@ namespace spiked3.winViz
             
             foreach (var robt in RobotDictionary.Values)
                 view1.Children.Remove(robt);
-            RobotDictionary.Clear();        // we are only supporting one at the moment
+            RobotDictionary.Clear();                // we are only supporting one at the moment
 
             MeshGeometryVisual3D robot = new MeshGeometryVisual3D();
 
@@ -242,8 +242,8 @@ namespace spiked3.winViz
 
             var xg = new Transform3DGroup();
             // +++these would be values from import dialog
-            xg.Children.Add(new ScaleTransform3D(.01, .01, .01));
-            xg.Children.Add(new TranslateTransform3D(0, 0, .5));
+            xg.Children.Add(new ScaleTransform3D(.001, .001, .001));
+            xg.Children.Add(new TranslateTransform3D(0, 0, .04));
             xg.Children.Add(new RotateTransform3D(new AxisAngleRotation3D(zAxis, -90)));
             //xg.Children.Add(new RotateTransform3D(new AxisAngleRotation3D(xAxis, 180)));
             robot.Model.Transform = xg;
@@ -271,7 +271,6 @@ namespace spiked3.winViz
                 lastJoyM1 = p.Left;
                 lastJoyM2 = p.Right;
             }
-
         }
 
         private void MenuExit_Click(object sender, RoutedEventArgs e)

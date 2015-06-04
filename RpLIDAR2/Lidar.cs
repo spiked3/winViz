@@ -43,15 +43,11 @@ namespace RpLidarLib
         event LidarBase.NewScanSetHandler NewScanSet;
     }
 
-    public class ScanPoint
+    public struct ScanPoint
     {
-        public double Angle { get; set; }
-
-        public double Distance { get; set; }
-
-        public int Quality { get; set; }
-
-        public DateTime TimeOfDeath { get; set; }
+        public float Angle;
+        public float Distance;
+        public int Quality;
     }
 
     public class Feature

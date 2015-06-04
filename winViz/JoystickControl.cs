@@ -5,6 +5,8 @@
 // 
 // /* ----------------------------------------------------------------------------------- */
 
+#define GAMEPAD
+
 #region Usings
 
 using System;
@@ -22,11 +24,13 @@ using System.Windows.Threading;
 using System.Windows.Input;
 using rChordata;
 using System.Diagnostics;
+#if GAMEPAD
 using XInputDotNetPure;
+#endif
 
 #endregion
 
-namespace spiked3
+namespace spiked3.winViz
 {
     public class JoystickControl : Canvas
     {
@@ -53,9 +57,6 @@ namespace spiked3
         public JoystickControl()
         {
             ClipToBounds = true;
-
-            // +++ get GamePad
-
             t.Interval = new TimeSpan(0, 0, 0, 0, 1000 / 20);
             t.Tick += TimerTick;
             t.Start();
@@ -75,6 +76,7 @@ namespace spiked3
 
         void TimerTick(object sender, EventArgs e)
         {
+#if GAMEPAD
             var c = GamePad.GetState(PlayerIndex.One);
             if (c.IsConnected)
             {
@@ -89,6 +91,7 @@ namespace spiked3
                 if (JoystickMovedListeners != null)
                     JoystickMovedListeners(DiamondPoint);
             }
+#endif
 
             InvalidateVisual();
         }

@@ -14,7 +14,8 @@ namespace spiked3.winViz
 {
     public partial class MainWindow : RibbonWindow
     {
-        private void LIDAR_Click(object sender, RoutedEventArgs e)
+
+        private void LIDAR_Serial_Click(object sender, RoutedEventArgs e)
         {
             Slam = new Slam();
             try
@@ -29,25 +30,34 @@ namespace spiked3.winViz
             }
 
             RpLidar.NewScanSet += LidarNewScanSet;
+            RpLidar.Start();
+        }
 
+        private void LIDAR_MQTT_Click(object sender, RoutedEventArgs e)
+        {
+            Slam = new Slam();
+            RpLidar = new RpLidarMqtt(Mqtt);
+            RpLidar.NewScanSet += LidarNewScanSet;
             RpLidar.Start();
         }
 
         void LidarNewScanSet(ScanPoint[] scanset)
         {
+#if true
+            Trace.WriteLine("new scanset");
+#else
             Dispatcher.InvokeAsync(() =>
             {
                 // provide an immutable sorted list for LIDARCanvas and others to use
                 LidarCanvas.Scans = new List<ScanPoint>(scanset.Length);
 
                 foreach (ScanPoint p in scanset)
-                    if (p != null)
-                        LidarCanvas.Scans.Add(new ScanPoint
-                        {
-                            Angle = p.Angle * Math.PI / 180.0,
-                            Distance = p.Distance,
-                            Quality = p.Quality
-                        });
+                    LidarCanvas.Scans.Add(new ScanPoint
+                    {
+                        Angle = (float)(p.Angle * Math.PI / 180.0),
+                        Distance = p.Distance,
+                        Quality = p.Quality
+                    });
 
                 List<double> derivatives = Slam.ComputeScanDerivatives(LidarCanvas.Scans);
 
@@ -57,6 +67,7 @@ namespace spiked3.winViz
                 LidarCanvas.InvalidateVisual();
 
             });
+#endif
         }
     }
 }

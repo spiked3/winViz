@@ -43,9 +43,6 @@ namespace spiked3.winViz
 
         void LidarNewScanSet(ScanPoint[] scanset)
         {
-#if true
-            Trace.WriteLine("new scanset");
-#else
             Dispatcher.InvokeAsync(() =>
             {
                 // provide an immutable sorted list for LIDARCanvas and others to use
@@ -65,9 +62,7 @@ namespace spiked3.winViz
                 landmarks1.Landmarks = Slam.FindLandmarksFromDerivatives(LidarCanvas.Scans, derivatives);
 
                 LidarCanvas.InvalidateVisual();
-
             });
-#endif
         }
     }
 }

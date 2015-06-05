@@ -117,7 +117,7 @@
 
             <Grid  Background="{StaticResource worldBg}" >
 
-                <helix:HelixViewport3D x:Name="view1" Camera="{helix:PerspectiveCamera 20, -50, 20}" ZoomExtentsWhenLoaded="False"
+                <helix:HelixViewport3D x:Name="view1" Camera="{helix:PerspectiveCamera 2, -5, 2}" ZoomExtentsWhenLoaded="False"
                                        ModelUpDirection="0,0,1" ShowCoordinateSystem="True" >
                     <helix:SunLight />
                     <!--<helix:FileModelVisual3D x:Name="robot1" />-->
@@ -127,7 +127,7 @@
                     <local:LandmarksVisual3D x:Name="landmarks1" Landmarks="{Binding Landmarks}" />
                     <!--<helix:PipeVisual3D Diameter="1" Point1="2,2,0" Point2="2,2,2" Fill="Green"  />-->
                     <helix:SphereVisual3D Radius=".05" Fill="White" />
-                    <helix:GridLinesVisual3D Thickness=".01" Length="100" Width="100" MajorDistance="10" MinorDistance="1" x:Name="grid1"  />
+                    <helix:GridLinesVisual3D Fill="Green" Thickness=".01" Length="100" Width="100" MajorDistance="10" MinorDistance="1" x:Name="grid1"  />
                 </helix:HelixViewport3D>
 
                 <!--<Border x:Name="overView1" HorizontalAlignment="Right" VerticalAlignment="Bottom" BorderBrush="Black" BorderThickness="4" Margin="4" Width="240" Height="180"

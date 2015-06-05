@@ -4,6 +4,7 @@ using System.Collections.Generic;
 using System.Diagnostics;
 using System.IO.Ports;
 using System.Linq;
+using System.Runtime.InteropServices;
 using System.Text;
 using System.Timers;
 using uPLibrary.Networking.M2Mqtt;
@@ -24,11 +25,47 @@ namespace RpLidarLib
 
         private void MqttMsgReceived(object sender, MqttMsgPublishEventArgs e)
         {
-            // +++ convert e.message to a scanset
+            ScanPoint[] scanData = FromByteArray<ScanPoint>(e.Message);
             if (NewScanSet != null)
-                NewScanSet(null);
-                //NewScanSet(e.Message);
+                NewScanSet(scanData);                
         }
+
+        // +++ may consider faster unsafe method if needed
+        static byte[] ToByteArray<T>(T[] source) where T : struct
+        {
+            GCHandle handle = GCHandle.Alloc(source, GCHandleType.Pinned);
+            try
+            {
+                IntPtr pointer = handle.AddrOfPinnedObject();
+                byte[] destination = new byte[source.Length * Marshal.SizeOf(typeof(T))];
+                Marshal.Copy(pointer, destination, 0, destination.Length);
+                return destination;
+            }
+            finally
+            {
+                if (handle.IsAllocated)
+                    handle.Free();
+            }
+        }
+
+        static T[] FromByteArray<T>(byte[] source) where T : struct
+        {
+            T[] destination = new T[source.Length / Marshal.SizeOf(typeof(T))];
+            GCHandle handle = GCHandle.Alloc(destination, GCHandleType.Pinned);
+            try
+            {
+                IntPtr pointer = handle.AddrOfPinnedObject();
+                Marshal.Copy(source, 0, pointer, source.Length);
+                return destination;
+            }
+            finally
+            {
+                if (handle.IsAllocated)
+                    handle.Free();
+            }
+        }
+
+
 
         public void Dispose()
         {

@@ -305,12 +305,11 @@ namespace spiked3.winViz
 
         private void Mqtt_MqttMsgPublishReceived(object sender, MqttMsgPublishEventArgs e)
         {
-            Trace.WriteLine(string.Format("Mqtt_MqttMsgPublishReceived: {0}/{1}", e.Topic, System.Text.Encoding.UTF8.GetString(e.Message)), "3");
-
             switch (e.Topic)
             {
                 case "robot1":
                     {
+                        Trace.WriteLine(string.Format("Mqtt_MqttMsgPublishReceived: {0}/{1}", e.Topic, System.Text.Encoding.UTF8.GetString(e.Message)), "3");
                         dynamic j = JsonConvert.DeserializeObject(System.Text.Encoding.UTF8.GetString(e.Message));
                         if (j != null)
                         {

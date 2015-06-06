@@ -185,7 +185,8 @@ namespace RpLidarLib
                 {
                     Point p = new Point(centerPoint.X + Zoom * m.Distance * Math.Sin(m.Angle),
                         centerPoint.Y + Zoom * m.Distance * -Math.Cos(m.Angle));
-                    segments.Add(new LineSegment(p, true));
+                    if (m.Distance > 0)
+                        segments.Add(new LineSegment(p, true));
                 }
                 if (segments.Count > 0)
                 {

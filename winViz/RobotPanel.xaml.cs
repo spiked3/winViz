@@ -33,9 +33,8 @@ namespace spiked3.winViz
 
         private void Init_Click(object sender, RoutedEventArgs e)
         {
-            Robot.SendPilot(new { Cmd = "PID", Idx = 0, P = 0.15, I = .03, D = .04 });
-            Robot.SendPilot(new { Cmd = "Geom", TPR = 60, Diam = 175.0F, Base = 220.0F, mMax = 450 });
-            //SerialSend(new { Cmd = "CALI", Vals = new int[] { -333, -3632, 2311, -1062, 28, -11 } });
+            Robot.SendPilot(new { Cmd = "Config", PID = new float[] { 0.15F, 0.03F, 0.04F } });
+            Robot.SendPilot(new { Cmd = "Config", Geom = new float[] { (float)((1000 / (Math.PI * 175) * 60)), 500F } });
         }
 
         private void Button_Click(object sender, RoutedEventArgs e)

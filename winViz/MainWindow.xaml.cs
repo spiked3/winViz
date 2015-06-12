@@ -179,7 +179,7 @@ namespace spiked3.winViz
             Trace.WriteLine(State, "1");
             Mqtt = new MqttClient(brokerString);
             Mqtt.MqttMsgPublishReceived += Mqtt_MqttMsgPublishReceived;
-            Mqtt.Connect("PC");
+            Mqtt.Connect("WinViz");
             Mqtt.Subscribe(new[] { "robot1/#" }, new[] { MqttMsgBase.QOS_LEVEL_EXACTLY_ONCE });  //+++ per robot
             State = "MQTT Connected";
             Trace.WriteLine("MQTT Connected", "1");

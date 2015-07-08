@@ -43,37 +43,12 @@
                         <RibbonButton Label="Console" Click="ConsoleTest_Click" LargeImageSource="Images/Monitor-04.png" />
                         <RibbonButton Label="Graphics"  LargeImageSource="Images/Pie-Chart.png" Click="TestG_Click" />
                         <RibbonButton Label="Step"  LargeImageSource="Images/Media-Pause.png" Click="Step_Click" />
-                        <RibbonButton Label="Test1"  LargeImageSource="Images/Chat - Next-01.png" Click="Test1_Click" />
-                        <RibbonButton Label="Test2" LargeImageSource="Images/Chat - Next-01.png" Click="Test2_Click" />
-                        <RibbonButton Label="LIDAR Serial" Click="LIDAR_Serial_Click " LargeImageSource="Images/Radar New.png" />
-                        <RibbonButton Label="LIDAR MQTT" Click="LIDAR_MQTT_Click " LargeImageSource="Images/Radar New.png" />
+                        <RibbonButton Label="Open LIDAR" Click="LIDAR_Click " LargeImageSource="Images/Radar New.png" />
                     </StackPanel>
                 </RibbonGroup>
                 <RibbonGroup Header="Main">
                     <RibbonButton Label="Reset"  LargeImageSource="Images/Command-Reset.png" Click="Reset_Click" />
                     <RibbonButton Label="Robot ..." SmallImageSource="Images/Robot.png" Click="Model_Click" />
-                </RibbonGroup>
-                <RibbonGroup Header="Options">
-                    <RibbonGroup.Resources>
-                        <Style TargetType="TextBlock">
-                            <Setter Property="HorizontalAlignment" Value="Center" />
-                        </Style>
-                    </RibbonGroup.Resources>
-                    <Grid Width="96">
-                        <Grid.ColumnDefinitions>
-                            <ColumnDefinition />
-                            <ColumnDefinition />
-                        </Grid.ColumnDefinitions>
-                        <Grid.RowDefinitions>
-                            <RowDefinition />
-                            <RowDefinition />
-                        </Grid.RowDefinitions>
-
-                        <TextBlock Text="Spare" Grid.Column="0" />
-                        <TextBlock Text="99.9" Grid.Column="1" HorizontalAlignment="Center" />
-                        <Slider Minimum=".50" Maximum="1" SmallChange=".05" LargeChange=".2" TickFrequency=".05"
-                            IsSnapToTickEnabled="True" TickPlacement="TopLeft" Grid.Row="1" Grid.ColumnSpan="2" />
-                    </Grid>
                 </RibbonGroup>
             </RibbonTab>
         </Ribbon>
@@ -124,7 +99,7 @@
                     <!--<helix:MeshGeometryVisual3D  x:Name="robot1" Material="{helix:Material Red}" />-->
                     <!--<helix:CubeVisual3D  x:Name="robot1" Center="0,0,0" Material="{helix:Material Red}" />-->
                     <!--<helix:CombinedManipulator TargetTransform="{Binding Transform, ElementName=robot1}" />-->
-                    <local:LandmarksVisual3D x:Name="landmarks1" Landmarks="{Binding Landmarks}" />
+                    <!--<local:LandmarksVisual3D x:Name="landmarks1" Landmarks="{Binding Landmarks}" />-->
                     <!--<helix:PipeVisual3D Diameter="1" Point1="2,2,0" Point2="2,2,2" Fill="Green"  />-->
                     <helix:SphereVisual3D Radius=".05" Fill="White" />
                     <helix:GridLinesVisual3D Fill="Green" Thickness=".01" Length="100" Width="100" MajorDistance="10" MinorDistance="1" x:Name="grid1"  />

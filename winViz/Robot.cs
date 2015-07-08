@@ -11,8 +11,6 @@ namespace spiked3.winViz
     public class Robot
     {
         public MqttClient Mqtt { get; internal set; }
-        public RobotPanel Panel { get; internal set; }
-
         public void SendPilot(dynamic p)
         {
             Mqtt.Publish("robot1/Cmd", UTF8Encoding.ASCII.GetBytes(JsonConvert.SerializeObject(p)));

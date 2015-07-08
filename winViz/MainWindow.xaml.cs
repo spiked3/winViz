@@ -132,7 +132,7 @@ namespace spiked3.winViz
         string LastRobot;
         LidarCanvas LidarCanvas;
 
-        string brokerString;
+        string mqttBroker, lidarPort;
         MqttClient Mqtt;
         Dictionary<string, Visual3D> RobotDictionary = new Dictionary<string, Visual3D>();
         ILidar RpLidar;
@@ -146,13 +146,14 @@ namespace spiked3.winViz
         public MainWindow()
         {
             InitializeComponent();
-            //Mqtt = new MqttClient(ConfigManager.Get<string>(brokerString));
 
-            brokerString = "127.0.0.1";
+            mqttBroker = "127.0.0.1";
+            lidarPort = "none";
 
             var p = new OptionSet
             {
-                   { "broker=", (v) => { brokerString = ConfigManager.Get<string>(v); } },
+                   { "lidar=", (v) => { lidarPort = v; } },
+                   { "mqtt=", (v) => { mqttBroker = v; } },
             };
 
             p.Parse(Environment.GetCommandLineArgs());
@@ -173,11 +174,10 @@ namespace spiked3.winViz
         {
             spiked3.Console.MessageLevel = 3;
             Trace.WriteLine("winViz / Gyro Fusion 0.3 © 2015 spiked3.com", "+");
-            //Mqtt = new MqttClient(ConfigManager.Get<string>("brokerPi"));
-            //Mqtt = new MqttClient(ConfigManager.Get<string>("brokerSelf"));
-            State = $"MQTT Connecting {brokerString}";
+
+            State = $"MQTT Connecting {mqttBroker}";
             Trace.WriteLine(State, "1");
-            Mqtt = new MqttClient(brokerString);
+            Mqtt = new MqttClient(mqttBroker);
             Mqtt.MqttMsgPublishReceived += Mqtt_MqttMsgPublishReceived;
             Mqtt.Connect("WinViz");
             Mqtt.Subscribe(new[] { "robot1/#" }, new[] { MqttMsgBase.QOS_LEVEL_EXACTLY_ONCE });  //+++ per robot
@@ -210,15 +210,6 @@ namespace spiked3.winViz
 
             // +++ handle multi robots
 
-            // for now - delete existing panel if there
-            for (int miniIdx = MiniUis.Count - 1; miniIdx >= 0; miniIdx--)
-                if (MiniUis[miniIdx] is RobotPanel)
-                    MiniUis.RemoveAt(miniIdx);
-
-            r.Panel = new RobotPanel { MaxWidth = 340, ToolTip = filename, DataContext = r };
-            r.Panel.joy1.JoystickMovedListeners += JoystickHandler;
-            MiniUiAdd(r.Panel, "Robot1", Brushes.Blue);
-            
             foreach (var robt in RobotDictionary.Values)
                 view1.Children.Remove(robt);
             RobotDictionary.Clear();                // we are only supporting one at the moment
@@ -260,23 +251,7 @@ namespace spiked3.winViz
             return r;
         }
 
-        double lastJoyM1, lastJoyM2;
         Robot theRobot;
-
-        private void JoystickHandler(rChordata.DiamondPoint p)
-        {
-            if (p.Left != lastJoyM1 || p.Right != lastJoyM2)
-            {
-                theRobot.SendPilot(new { Cmd = "Pwr", M1 = p.Left, M2 = p.Right });
-                lastJoyM1 = p.Left;
-                lastJoyM2 = p.Right;
-            }
-        }
-
-        private void MenuExit_Click(object sender, RoutedEventArgs e)
-        {
-            Close();
-        }
 
         void MiniUiAdd(UIElement u, string title, Brush bg)
         {
@@ -398,21 +373,9 @@ namespace spiked3.winViz
             })).Start();
         }
 
-        void Test1_Click(object sender, RoutedEventArgs e)
-        {
-            Trace.WriteLine("Test1_Click", "1");
-            Mqtt.Publish("Cmd/robot1", UTF8Encoding.ASCII.GetBytes(@"{""T"":""Cmd"", ""Cmd"":""Test1""}"));
-        }
-
         private void SaveLayout_Click(object sender, RoutedEventArgs e)
         {
             SaveSettings();
-        }
-
-        void Test2_Click(object sender, RoutedEventArgs e)
-        {
-            Trace.WriteLine("Test2_Click", "1");
-            Mqtt.Publish("Cmd/robot1", UTF8Encoding.ASCII.GetBytes(@"{""T"":""Cmd"", ""Cmd"":""Reset""}"));
         }
 
         private void Window_Closing(object sender, System.ComponentModel.CancelEventArgs e)

@@ -5,7 +5,7 @@
              xmlns:d="http://schemas.microsoft.com/expression/blend/2008" 
              xmlns:ll="clr-namespace:RpLidarLib;assembly=RpLidar"
              mc:Ignorable="d" 
-             d:DesignHeight="300" d:DesignWidth="300">
+             d:DesignHeight="300" d:DesignWidth="300" Margin="8">
     
         <ll:LidarCanvas x:Name="LidarCanvas" LandmarkBrush="Green" LandmarkSize="6" ClipToBounds="True" Background="White"
                         Scans="{Binding Scans}" Landmarks="{Binding Landmarks}" ScanBrush="#FF89EAFF" 

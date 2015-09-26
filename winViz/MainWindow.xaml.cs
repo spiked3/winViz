@@ -199,11 +199,6 @@ namespace spiked3.winViz
             console1.Test();
         }
 
-        private void Exit_Click(object sender, RoutedEventArgs e)
-        {
-            Close();
-        }
-
         Robot LoadRobot(string filename)
         {
             Robot r = new Robot { Mqtt = Mqtt };
@@ -376,6 +371,11 @@ namespace spiked3.winViz
         private void SaveLayout_Click(object sender, RoutedEventArgs e)
         {
             SaveSettings();
+        }
+
+        private void Exit_Click(object sender, RoutedEventArgs e)
+        {
+            Close();
         }
 
         private void Window_Closing(object sender, System.ComponentModel.CancelEventArgs e)

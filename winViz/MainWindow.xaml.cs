@@ -327,7 +327,7 @@ namespace spiked3.winViz
         private void Reset_Click(object sender, RoutedEventArgs e)
         {
             NewRobotPose("robot1", 0, 0, 0, 0);
-            Mqtt.Publish("robot1/Cmd", UTF8Encoding.ASCII.GetBytes(@"{""Cmd"":""Reset""}"));
+            Mqtt.Publish("robot1/Cmd", UTF8Encoding.ASCII.GetBytes(@"{""Cmd"":""RESET""}"));
             firstStep = true;
         }
 
